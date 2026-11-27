@@ -34,13 +34,38 @@
   // ---------- Download links from the latest GitHub release ----------
   (function () {
     var dl = document.getElementById("dl");
-    var all = document.getElementById("dl-all");
-    if (!dl) return;
+    var links = document.querySelectorAll("a[data-os]");
+    if (!dl && !links.length) return;
     var ua = navigator.userAgent;
     var os = /Mac/i.test(ua) ? "mac" : /Linux|X11/i.test(ua) && !/Android/i.test(ua) ? "appimage" : /Win/i.test(ua) ? "win" : "";
     var names = { win: "Windows", mac: "macOS", appimage: "Linux" };
-    var label = dl.firstChild;
-    if (os) label.nodeValue = "Download for " + names[os] + " ";
+    if (dl && os) dl.firstChild.nodeValue = "Download for " + names[os] + " ";
+
+    // Dropdown menus: the visitor's platform goes first and is marked.
+    Array.prototype.forEach.call(document.querySelectorAll(".dd"), function (dd) {
+      var btn = dd.querySelector(".dd-btn");
+      var menu = dd.querySelector(".dd-menu");
+      var mine = os && menu.querySelector('a[data-os="' + os + '"]');
+      if (mine) {
+        mine.classList.add("rec");
+        mine.querySelector("b").insertAdjacentHTML("beforeend", ' <em class="rec-tag">Your system</em>');
+        menu.insertBefore(mine, menu.firstChild);
+      }
+      var setOpen = function (open) {
+        if (open) {
+          // Open upward when the menu would be clipped by the section or the window.
+          dd.classList.remove("up");
+          var clip = dd.closest(".hero, .section") || document.body;
+          var limit = Math.min(clip.getBoundingClientRect().bottom, window.innerHeight);
+          if (btn.getBoundingClientRect().bottom + menu.offsetHeight + 16 > limit) dd.classList.add("up");
+        }
+        dd.classList.toggle("open", open);
+        btn.setAttribute("aria-expanded", open ? "true" : "false");
+      };
+      btn.addEventListener("click", function (e) { e.stopPropagation(); setOpen(!dd.classList.contains("open")); });
+      document.addEventListener("click", function (e) { if (!dd.contains(e.target)) setOpen(false); });
+      document.addEventListener("keydown", function (e) { if (e.key === "Escape" && dd.classList.contains("open")) { setOpen(false); btn.focus(); } });
+    });
     var pick = {
       win: function (n) { return /setup\.exe$/i.test(n) || /\.exe$/i.test(n); },
       mac: function (n) { return /\.dmg$/i.test(n); },
@@ -53,8 +78,8 @@
       .then(function (rel) {
         if (!rel || !rel.assets) return;
         var url = function (k) { var a = rel.assets.filter(function (x) { return pick[k](x.name); })[0]; return a && a.browser_download_url; };
-        if (os && url(os)) dl.href = url(os);
-        if (all) Array.prototype.forEach.call(all.querySelectorAll("a[data-os]"), function (a) { var u = url(a.dataset.os); if (u) a.href = u; });
+        if (dl && os && url(os)) dl.href = url(os);
+        Array.prototype.forEach.call(links, function (a) { var u = url(a.dataset.os); if (u) a.href = u; });
         var v = document.getElementById("dl-ver"); if (v && rel.tag_name) v.textContent = "Version " + rel.tag_name.replace(/^v/, "");
       })
       .catch(function () {});
