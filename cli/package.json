@@ -1,6 +1,6 @@
 {
   "name": "cepheus-ide",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Cepheus: an open-source AI coding agent for your terminal. Works out of the box with free NVIDIA Nemotron models (no key needed), your own NVIDIA key, local models (Ollama, LM Studio) or your own Anthropic, Gemini and OpenAI-compatible keys.",
   "keywords": [
     "ai",
