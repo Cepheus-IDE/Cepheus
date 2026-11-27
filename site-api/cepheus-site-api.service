@@ -1,0 +1,27 @@
+[Unit]
+Description=Cepheus site API (token address, X profile, holders, admin)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=cepheus
+Group=cepheus
+WorkingDirectory=/srv/cepheus/site-api
+Environment=PORT=8791
+Environment=HOST=127.0.0.1
+Environment=STATE_DIR=/var/lib/cepheus-site
+ExecStart=/usr/bin/node /srv/cepheus/site-api/server.mjs
+Restart=always
+RestartSec=3
+MemoryMax=128M
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+StateDirectory=cepheus-site
+StateDirectoryMode=0700
+ReadWritePaths=/var/lib/cepheus-site
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target

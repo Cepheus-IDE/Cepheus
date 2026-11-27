@@ -31,6 +31,19 @@
   if (lenis) lenis.on("scroll", onScroll); else window.addEventListener("scroll", onScroll, { passive: true });
   onScroll();
 
+  // ---------- Narrow screens: the links collapse into a morphing menu ----------
+  var menuBtn = nav && nav.querySelector(".nav-menu-btn");
+  if (menuBtn) {
+    var setMenu = function (open) { nav.classList.toggle("menu-open", open); menuBtn.setAttribute("aria-expanded", open ? "true" : "false"); };
+    menuBtn.addEventListener("click", function () { setMenu(!nav.classList.contains("menu-open")); });
+    document.addEventListener("click", function (e) {
+      if (!nav.classList.contains("menu-open") || e.target.closest(".nav-menu-btn")) return;
+      if (e.target.closest(".links a") || !e.target.closest(".links")) setMenu(false);
+    });
+    document.addEventListener("keydown", function (e) { if (e.key === "Escape" && nav.classList.contains("menu-open")) { setMenu(false); menuBtn.focus(); } });
+    window.addEventListener("resize", function () { if (window.innerWidth >= 1100) setMenu(false); });
+  }
+
   // ---------- Download links from the latest GitHub release ----------
   (function () {
     var dl = document.getElementById("dl");

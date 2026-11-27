@@ -1,0 +1,353 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<title>Cepheus Admin</title>
+<link rel="icon" href="favicon.ico" sizes="32x32">
+<link rel="icon" href="logo.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="theme-color" content="#fbfbfa">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="site.css">
+<style>
+  /* The admin page has no scroll-morphing nav script, so the bar keeps a frosted background. */
+  .nav { background: rgba(251, 251, 250, .82); backdrop-filter: saturate(1.6) blur(16px); -webkit-backdrop-filter: saturate(1.6) blur(16px); box-shadow: 0 1px 0 rgba(0, 0, 0, .05); padding-block: 14px; }
+  .rc-count span { color: var(--ink-2); }
+  /* Forgot-password panel: grows out of the sign-in card. */
+  .morph { display: grid; grid-template-rows: 0fr; opacity: 0; transition: grid-template-rows .6s var(--ease), opacity .4s var(--ease), margin .6s var(--ease); }
+  .morph.open { grid-template-rows: 1fr; opacity: 1; margin-top: 22px; }
+  .morph > div { overflow: hidden; min-height: 0; }
+  .morph-in { padding: 22px; border-radius: 22px; background: var(--bg-2); transition: border-radius .8s var(--ease); }
+  .morph-in:hover { border-radius: 34px; }
+  .morph-in h3 { margin: 0 0 14px; font: 500 17px var(--display); letter-spacing: -.01em; }
+  .morph-in .input { background: #fff; }
+  .linkish { border: 0; background: none; padding: 4px 2px; cursor: pointer; font: 500 14px var(--display); color: var(--ink-2); text-decoration: underline; text-decoration-color: var(--red); text-underline-offset: 4px; transition: color .2s; }
+  .linkish:hover { color: var(--ink); }
+  .fallback { margin: 14px 0 0; font: 12px/1.6 var(--mono); color: var(--ink-3); }
+  .fallback code { font: 12px var(--mono); background: #fff; border-radius: 6px; padding: 1px 6px; color: var(--ink); overflow-wrap: anywhere; }
+  .rc-count { display: inline-flex; align-items: center; gap: 10px; margin: 0 0 16px; font: 13px var(--mono); color: var(--ink-2); }
+  .rc-count b { font: 500 22px var(--display); color: var(--ink); letter-spacing: -.02em; }
+  .rc-count.low b { color: var(--red); }
+  .rc-codes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 0 0 14px; padding: 16px; border-radius: 18px; background: var(--ink); list-style: none; counter-reset: rc; transition: border-radius .8s var(--ease); }
+  .rc-codes:hover { border-radius: 30px; }
+  .rc-codes li { counter-increment: rc; font: 15px var(--mono); color: #fff; letter-spacing: .04em; padding: 6px 8px; border-radius: 10px; transition: background .3s, border-radius .45s var(--ease); }
+  .rc-codes li::before { content: counter(rc) "."; color: #6c6c68; margin-right: 10px; font-size: 12px; }
+  .rc-codes li:hover { background: #1f1f1f; border-radius: 999px; }
+  .rc-new[hidden] { display: none; }
+  @media (max-width: 520px) { .rc-codes { grid-template-columns: minmax(0, 1fr); } }
+</style>
+</head>
+<body>
+
+<nav class="nav" id="nav">
+  <a class="brand" href="index.html">
+    <svg width="18" height="18" viewBox="0 0 32 32" aria-hidden="true"><path d="M16 4 L27 12.5 L23.5 28 L8.5 28 L5 12.5 Z" fill="none" stroke="#121212" stroke-width="1.6" stroke-linejoin="round"/><circle cx="16" cy="4" r="2.8" fill="#e5352b"/><circle cx="27" cy="12.5" r="2" fill="#121212"/><circle cx="23.5" cy="28" r="2" fill="#121212"/><circle cx="8.5" cy="28" r="2" fill="#121212"/><circle cx="5" cy="12.5" r="2" fill="#121212"/></svg>
+    <span class="brand-name">Cepheus</span>
+  </a>
+  <div class="nav-end">
+    <button type="button" class="btn btn-light" id="logout" data-admin hidden>Sign out</button>
+  </div>
+</nav>
+
+<main class="admin-main">
+  <div class="admin">
+    <div>
+      <p class="eyebrow">Admin</p>
+      <h1>$CEPHEUS settings<span class="dot">.</span></h1>
+    </div>
+
+    <!-- Sign in -->
+    <form class="panel" id="login" data-admin hidden autocomplete="on">
+      <h2>Sign in</h2>
+      <div class="field">
+        <label for="pw">Password</label>
+        <input class="input" id="pw" name="password" type="password" autocomplete="current-password" required maxlength="256">
+      </div>
+      <div class="row-btns">
+        <button class="btn btn-dark" type="submit">Sign in <span class="chev" aria-hidden="true">&gt;&gt;</span></button>
+        <button class="linkish" type="button" id="forgot" aria-expanded="false" aria-controls="reset-wrap">Forgot password?</button>
+      </div>
+      <p class="msg err" id="login-msg" role="alert" hidden></p>
+    </form>
+
+    <!-- Forgot password: one-time recovery code -->
+    <div class="morph" id="reset-wrap" data-admin hidden>
+      <div>
+        <form class="morph-in" id="reset" novalidate>
+          <h3>Reset with a recovery code</h3>
+          <div class="field">
+            <label for="rc">Recovery code</label>
+            <input class="input" id="rc" placeholder="xxxx-xxxx-xxxx" spellcheck="false" autocomplete="one-time-code" maxlength="20">
+          </div>
+          <input type="text" name="username" value="admin" autocomplete="username" hidden>
+          <div class="field">
+            <label for="rn1">New password</label>
+            <input class="input" id="rn1" type="password" autocomplete="new-password" minlength="12" maxlength="256">
+            <span class="hint">12 to 256 characters. Every signed-in session is signed out.</span>
+          </div>
+          <div class="field">
+            <label for="rn2">Repeat new password</label>
+            <input class="input" id="rn2" type="password" autocomplete="new-password" minlength="12" maxlength="256">
+          </div>
+          <div class="row-btns"><button class="btn btn-dark" type="submit" id="reset-btn">Reset password</button></div>
+          <p class="msg" id="reset-msg" role="alert" hidden></p>
+          <p class="fallback">Lost all codes? Reset from the server: as root run <code>node /srv/cepheus/site-api/server.mjs --reset-password</code>, then <code>systemctl restart cepheus-site-api</code>.</p>
+        </form>
+      </div>
+    </div>
+
+    <!-- Settings -->
+    <form class="panel" id="settings" data-admin hidden autocomplete="off" novalidate>
+      <h2>Token</h2>
+      <div class="field">
+        <label for="ca">Contract address (CA)</label>
+        <input class="input" id="ca" name="ca" placeholder="0x…" spellcheck="false" maxlength="42">
+        <span class="hint">0x followed by 40 hex characters. Saved in checksum form. Leave empty to hide it.</span>
+      </div>
+      <div class="field">
+        <label for="x">X profile</label>
+        <input class="input" id="x" name="x" placeholder="@handle or https://x.com/handle" spellcheck="false" maxlength="80">
+        <span class="hint">Saved as https://x.com/&lt;handle&gt;. Leave empty to hide the X button.</span>
+      </div>
+      <div class="field">
+        <span class="lbl" id="net-l">Network for holder data</span>
+        <div class="seg" id="net" role="radiogroup" aria-labelledby="net-l"></div>
+        <span class="hint">Never shown on the public site. The Connect wallet button always uses Robinhood Chain mainnet.</span>
+      </div>
+      <div class="field">
+        <label for="key">Blockscout API key (mainnet holders)</label>
+        <input class="input" id="key" name="key" type="password" autocomplete="new-password" spellcheck="false" maxlength="128">
+        <span class="hint" id="key-hint">Mainnet holder data needs a free key from dev.blockscout.com. Leave empty to keep the saved key.</span>
+        <label class="chk" id="key-clear-wrap" hidden><input type="checkbox" id="key-clear"> Remove the saved key</label>
+      </div>
+
+      <div class="field">
+        <span class="lbl">Live preview: exactly what visitors see</span>
+        <section class="token-band preview" data-token data-preview hidden>
+          <div class="token-row">
+            <div>
+              <p class="eyebrow">Token · Robinhood Chain</p>
+              <h2>$CEPHEUS<span class="dot">.</span></h2>
+            </div>
+            <div class="token-actions">
+              <div class="ca-pill" data-ca-wrap hidden><span class="ca-k">CA</span><code data-ca></code><button type="button" class="copy" data-copy-ca>Copy</button></div>
+              <a class="btn btn-light x-btn" data-x hidden href="https://x.com/" target="_blank" rel="noopener">Follow on X</a>
+              <a class="btn btn-ghost" data-holders-link hidden href="holders.html" target="_blank">Top holders <span class="chev" aria-hidden="true">&gt;&gt;</span></a>
+            </div>
+          </div>
+        </section>
+        <p class="preview-empty" id="preview-empty">Nothing is shown publicly: the token section and the Token link stay hidden.</p>
+      </div>
+
+      <div class="row-btns">
+        <button class="btn btn-dark" type="submit" id="save">Save</button>
+        <button class="btn btn-light" type="button" id="revert">Revert</button>
+      </div>
+      <p class="msg" id="save-msg" role="status" hidden></p>
+    </form>
+
+    <!-- Recovery codes -->
+    <section class="panel" id="recovery" data-admin hidden>
+      <h2>Recovery codes</h2>
+      <p class="rc-count" id="rc-count"><b>0</b><span>unused codes left</span></p>
+      <div class="rc-new" id="rc-new" hidden>
+        <p class="msg ok" style="margin:0 0 12px">Save these now. They are shown only once, and each one works one time on the “Forgot password?” form.</p>
+        <ol class="rc-codes" id="rc-codes"></ol>
+        <div class="row-btns" style="margin-bottom:16px">
+          <button class="btn btn-light" type="button" id="rc-copy">Copy all</button>
+          <button class="btn btn-light" type="button" id="rc-dl">Download .txt</button>
+        </div>
+      </div>
+      <div class="row-btns"><button class="btn btn-dark" type="button" id="rc-gen">Generate new codes</button></div>
+      <p class="hint" style="margin:12px 0 0;font:12px/1.5 var(--mono);color:var(--ink-3)">Generating new codes replaces all old ones.</p>
+      <p class="msg" id="rc-msg" role="status" hidden></p>
+    </section>
+
+    <!-- Password -->
+    <form class="panel" id="password" data-admin hidden>
+      <h2>Change password</h2>
+      <input type="text" name="username" value="admin" autocomplete="username" hidden>
+      <div class="field">
+        <label for="cur">Current password</label>
+        <input class="input" id="cur" type="password" autocomplete="current-password" required maxlength="256">
+      </div>
+      <div class="field">
+        <label for="new1">New password</label>
+        <input class="input" id="new1" type="password" autocomplete="new-password" required minlength="12" maxlength="256">
+        <span class="hint">At least 12 characters. Other signed-in sessions are signed out.</span>
+      </div>
+      <div class="field">
+        <label for="new2">Repeat new password</label>
+        <input class="input" id="new2" type="password" autocomplete="new-password" required minlength="12" maxlength="256">
+      </div>
+      <div class="row-btns"><button class="btn btn-dark" type="submit">Change password</button></div>
+      <p class="msg" id="pw-msg" role="status" hidden></p>
+    </form>
+  </div>
+</main>
+
+<script src="token.js"></script>
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var saved = null;
+
+  function api(method, path, body) {
+    return fetch("/api/site/" + path, {
+      method: method, credentials: "same-origin", cache: "no-store",
+      headers: body ? { "Content-Type": "application/json" } : {},
+      body: body ? JSON.stringify(body) : undefined
+    }).then(function (r) {
+      return r.json().catch(function () { return {}; }).then(function (d) { return { status: r.status, ok: r.ok, data: d }; });
+    });
+  }
+  function say(el, kind, text) { el.className = "msg " + kind; el.textContent = text; el.hidden = false; }
+  function view(signedIn) {
+    $("login").hidden = signedIn; $("reset-wrap").hidden = signedIn; $("settings").hidden = !signedIn; $("password").hidden = !signedIn; $("recovery").hidden = !signedIn; $("logout").hidden = !signedIn;
+    if (signedIn) setForgot(false);
+    else { $("rc-new").hidden = true; $("rc-codes").innerHTML = ""; shown = []; }
+    if (!signedIn) setTimeout(function () { $("pw").focus(); }, 50);
+  }
+
+  // Client-side mirror of the server rules, used only for the live preview.
+  function caOf(v) { v = v.trim(); return /^0x[0-9a-fA-F]{40}$/.test(v) ? v : null; }
+  function xOf(v) {
+    v = v.trim();
+    var m = v.match(/^(?:https?:\/\/)?(?:www\.|mobile\.)?(?:x|twitter)\.com\/@?([A-Za-z0-9_]{1,15})\/?(?:[?#].*)?$/i) || v.match(/^@?([A-Za-z0-9_]{1,15})$/);
+    return m ? "https://x.com/" + m[1] : null;
+  }
+  function preview() {
+    var ca = caOf($("ca").value), x = xOf($("x").value);
+    $("ca").classList.toggle("bad", !!$("ca").value.trim() && !ca);
+    $("x").classList.toggle("bad", !!$("x").value.trim() && !x);
+    var box = document.querySelector("[data-preview]");
+    window.CepheusToken.render(box, { ca: ca, x: x });
+    $("preview-empty").hidden = !!(ca || x);
+  }
+  function fill(s) {
+    saved = s;
+    $("ca").value = s.ca || ""; $("x").value = s.x || ""; $("key").value = ""; $("key-clear").checked = false;
+    $("key-clear-wrap").hidden = !s.explorerKeySet;
+    $("key-hint").textContent = s.explorerKeySet ? "A key is saved (hidden). Type a new one to replace it." : "Mainnet holder data needs a free key from dev.blockscout.com. No key is saved.";
+    $("net").innerHTML = s.networks.map(function (n) {
+      return '<label><input type="radio" name="network" value="' + n.id + '"' + (n.id === s.network ? " checked" : "") + '><span>' + n.name.replace(/&/g, "&amp;").replace(/</g, "&lt;") + "<small>" + n.chainId + "</small></span></label>";
+    }).join("");
+    preview();
+    setCount(s.recoveryLeft || 0);
+  }
+  function setCount(n) {
+    var c = $("rc-count");
+    c.querySelector("b").textContent = n;
+    c.querySelector("span").textContent = n === 1 ? "unused code left" : n ? "unused codes left" : "No recovery codes yet. Generate some so you can reset a lost password.";
+    c.classList.toggle("low", n <= 2);
+  }
+
+  // ---------- Forgot password ----------
+  function setForgot(open) {
+    $("reset-wrap").classList.toggle("open", open);
+    $("forgot").setAttribute("aria-expanded", open ? "true" : "false");
+    if (open) setTimeout(function () { $("rc").focus(); }, 200);
+  }
+  $("forgot").addEventListener("click", function () { setForgot(!$("reset-wrap").classList.contains("open")); });
+  $("reset").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var msg = $("reset-msg"), btn = $("reset-btn");
+    var code = $("rc").value.trim(), n1 = $("rn1").value, n2 = $("rn2").value;
+    if (!/^[A-Za-z0-9]{4}-?[A-Za-z0-9]{4}-?[A-Za-z0-9]{4}$/.test(code.replace(/\s+/g, ""))) return say(msg, "err", "Enter the recovery code in the form xxxx-xxxx-xxxx.");
+    if (n1.length < 12 || n1.length > 256) return say(msg, "err", "The new password must be 12 to 256 characters.");
+    if (n1 !== n2) return say(msg, "err", "The new passwords do not match.");
+    btn.disabled = true; btn.textContent = "Checking…";
+    api("POST", "reset-password", { code: code, next: n1 }).then(function (r) {
+      if (!r.ok) return say(msg, "err", r.data.error || "Could not reset the password.");
+      $("rc").value = $("rn1").value = $("rn2").value = ""; msg.hidden = true;
+      return load().then(function () { say($("rc-msg"), "ok", "Password reset and signed in. That code is used up: " + r.data.recoveryLeft + " left."); });
+    }).catch(function () { say(msg, "err", "Could not reach the server."); })
+      .then(function () { btn.disabled = false; btn.textContent = "Reset password"; });
+  });
+
+  // ---------- Recovery codes ----------
+  var shown = [];
+  $("rc-gen").addEventListener("click", function () {
+    var left = +$("rc-count").querySelector("b").textContent;
+    if (left && !confirm("Generate 8 new codes? The " + left + " unused old codes stop working.")) return;
+    var b = $("rc-gen"); b.disabled = true;
+    api("POST", "admin/recovery", {}).then(function (r) {
+      if (r.status === 401) { view(false); return say($("login-msg"), "err", "Your session ended. Sign in again."); }
+      if (!r.ok) return say($("rc-msg"), "err", r.data.error || "Could not generate codes");
+      shown = r.data.codes;
+      $("rc-codes").innerHTML = shown.map(function (c) { return "<li>" + c.replace(/[^a-z0-9-]/g, "") + "</li>"; }).join("");
+      $("rc-new").hidden = false; $("rc-msg").hidden = true;
+      setCount(r.data.recoveryLeft);
+    }).catch(function () { say($("rc-msg"), "err", "Could not reach the server."); }).then(function () { b.disabled = false; });
+  });
+  var codesText = function () { return "Cepheus admin recovery codes (cepheus.codes/admin)\nEach code works once.\n\n" + shown.join("\n") + "\n"; };
+  $("rc-copy").addEventListener("click", function () {
+    var b = this;
+    navigator.clipboard.writeText(codesText()).then(function () { b.textContent = "Copied"; setTimeout(function () { b.textContent = "Copy all"; }, 1600); });
+  });
+  $("rc-dl").addEventListener("click", function () {
+    var url = URL.createObjectURL(new Blob([codesText()], { type: "text/plain" }));
+    var a = document.createElement("a"); a.href = url; a.download = "cepheus-recovery-codes.txt";
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+  });
+  function load() {
+    return api("GET", "admin/settings").then(function (r) {
+      if (r.status === 401) return view(false);
+      if (!r.ok) throw new Error(r.data.error || "Could not load settings");
+      fill(r.data); view(true);
+    }).catch(function (e) { view(false); say($("login-msg"), "err", e.message || "Could not reach the server."); });
+  }
+
+  $("login").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var m = $("login-msg"); m.hidden = true;
+    api("POST", "login", { password: $("pw").value }).then(function (r) {
+      if (r.ok) { $("pw").value = ""; return load(); }
+      say(m, "err", r.data.error || "Sign in failed");
+    }).catch(function () { say(m, "err", "Could not reach the server."); });
+  });
+  $("logout").addEventListener("click", function () { api("POST", "logout", {}).then(function () { view(false); }); });
+
+  $("ca").addEventListener("input", preview);
+  $("x").addEventListener("input", preview);
+  $("revert").addEventListener("click", function () { if (saved) fill(saved); $("save-msg").hidden = true; });
+
+  $("settings").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var msg = $("save-msg"), btn = $("save");
+    var net = document.querySelector('input[name="network"]:checked');
+    var body = { ca: $("ca").value.trim() || null, x: $("x").value.trim() || null, network: net ? net.value : "mainnet" };
+    if ($("key").value.trim()) body.explorerKey = $("key").value.trim();
+    else if ($("key-clear").checked) body.explorerKey = null;
+    btn.disabled = true; btn.textContent = "Saving…";
+    api("PUT", "admin/settings", body).then(function (r) {
+      if (r.status === 401) { view(false); return say($("login-msg"), "err", "Your session ended. Sign in again."); }
+      if (!r.ok) return say(msg, "err", r.data.error || "Could not save");
+      fill(r.data);
+      say(msg, "ok", r.data.ca || r.data.x ? "Saved. The token section is live on the public site." : "Saved. Nothing is shown publicly.");
+    }).catch(function () { say(msg, "err", "Could not reach the server. Nothing was saved."); })
+      .then(function () { btn.disabled = false; btn.textContent = "Save"; });
+  });
+
+  $("password").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var msg = $("pw-msg");
+    if ($("new1").value !== $("new2").value) return say(msg, "err", "The new passwords do not match.");
+    if ($("new1").value.length < 12) return say(msg, "err", "Use at least 12 characters.");
+    api("POST", "admin/password", { current: $("cur").value, next: $("new1").value }).then(function (r) {
+      if (r.ok) { $("cur").value = $("new1").value = $("new2").value = ""; return say(msg, "ok", "Password changed. Other sessions were signed out."); }
+      if (r.status === 401 && /signed in/i.test(r.data.error || "")) return view(false);
+      say(msg, "err", r.data.error || "Could not change the password");
+    }).catch(function () { say(msg, "err", "Could not reach the server."); });
+  });
+
+  load();
+})();
+</script>
+</body>
+</html>
