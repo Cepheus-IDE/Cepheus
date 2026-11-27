@@ -4,6 +4,8 @@
  * the Open VSX registry. Pure `fetch`, no `node:*` imports, so the browser backend reuses it.
  */
 
+import { cepheusProxyBase } from "../core/providers.js";
+
 export interface WebProviderConfig {
   provider: string;
   apiKey?: string;
@@ -33,6 +35,26 @@ export function setBrowserMode(on: boolean) {
   browserMode = on;
 }
 
+/**
+ * Whether keyless NVIDIA requests may use the Cepheus free proxy. Always for the Node server;
+ * in the browser only on pages the proxy's CORS allows (https://cepheus.codes).
+ */
+let freeProxy = true;
+export function setFreeProxy(on: boolean) {
+  freeProxy = on;
+}
+
+/** Origins the free proxy accepts browser requests from. */
+export const FREE_PROXY_ORIGINS = ["https://cepheus.codes", "https://www.cepheus.codes"];
+
+/**
+ * Keyless NVIDIA config → the free proxy (no Authorization header), or null when it can't be used
+ * here. An explicit base URL is kept (it may itself be a proxy).
+ */
+export function freeProxyConfig<T extends { apiKey?: string; baseUrl?: string | null }>(cfg: T): T | null {
+  return freeProxy ? { ...cfg, apiKey: "", baseUrl: (cfg.baseUrl ?? "").trim() || cepheusProxyBase() } : null;
+}
+
 const base = (c: WebProviderConfig, dflt: string) => (c.baseUrl && c.baseUrl.trim() ? c.baseUrl.trim().replace(/\/+$/, "") : dflt);
 
 function isChatModel(id: string): boolean {
@@ -58,6 +80,8 @@ export function explainFetchError(e: unknown, cfg: WebProviderConfig | null, url
   const p = cfg?.provider;
   if (/localhost|127\.0\.0\.1/.test(host) && /11434/.test(host)) {
     hint = "Ollama rejects web pages by default. Restart it with OLLAMA_ORIGINS set to this site (for example OLLAMA_ORIGINS=* or the page's origin).";
+  } else if (host.includes("cepheus.codes")) {
+    hint = "The free Cepheus tier only accepts web pages served from https://cepheus.codes. Add your own key in Settings, or run `cepheus web`.";
   } else if (p === "nvidia" || host.includes("nvidia.com")) {
     hint = "NVIDIA's API does not allow requests from web pages (CORS). Use `cepheus web` (the local server) to use NVIDIA models.";
   } else if (host.includes("localhost") || host.includes("127.0.0.1")) {
@@ -109,15 +133,18 @@ function anthropicHeaders(key: string): Record<string, string> {
   return h;
 }
 
-/** Resolves the NVIDIA key: the user's own, else `defaultNvidiaKey` (server env var), else error. */
+/** Message when keyless NVIDIA can't use the free proxy (browser page not on cepheus.codes). */
+export const NO_FREE_PROXY =
+  "Free access without a key works on https://cepheus.codes, in `cepheus web` and in the desktop app. Here, add your own NVIDIA key (free at build.nvidia.com) or another provider in Settings.";
+
+/** Resolves the NVIDIA key: the user's own, else `defaultNvidiaKey` (server env var), else the free proxy. */
 function withNvidia(cfg: WebProviderConfig, defaultNvidiaKey?: string): WebProviderConfig {
   if (cfg.provider !== "nvidia") return cfg;
   const key = (cfg.apiKey || "").trim() || (defaultNvidiaKey || "").trim();
   if (!key) {
-    throw new Error(
-      "The free built-in NVIDIA key is only part of the desktop app. Add your own NVIDIA key (free at build.nvidia.com) in Settings" +
-        (browserMode ? "." : ", or start `cepheus web` with NVIDIA_API_KEY set."),
-    );
+    const free = freeProxyConfig(cfg);
+    if (!free) throw new Error(NO_FREE_PROXY);
+    return free;
   }
   return { ...cfg, apiKey: key, baseUrl: cfg.baseUrl || NVIDIA_BASE };
 }

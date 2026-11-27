@@ -2,7 +2,7 @@
 import { promises as fs, readFileSync, existsSync, mkdirSync, writeFileSync, chmodSync } from "node:fs";
 import * as path from "node:path";
 import type { ApprovalMode, ProviderConfig } from "../core/types.js";
-import { expandAuto, presetById, PRESETS, type ProviderPreset } from "../core/providers.js";
+import { CEPHEUS_PROXY_BASE, expandAuto, presetById, PRESETS, type ProviderPreset } from "../core/providers.js";
 import { cepheusHome } from "./host.js";
 
 export interface CepheusConfig {
@@ -78,8 +78,8 @@ export function envKey(preset: string, env: NodeJS.ProcessEnv = process.env): { 
   return null;
 }
 
-/** Picks a provider from the environment when none is configured. */
-export function detectProvider(cfg: CepheusConfig, env: NodeJS.ProcessEnv = process.env): string | null {
+/** Picks a provider from the config or environment; the keyless Cepheus free tier when neither has one. */
+export function detectProvider(cfg: CepheusConfig, env: NodeJS.ProcessEnv = process.env): string {
   if (env.CEPHEUS_PROVIDER?.trim()) return env.CEPHEUS_PROVIDER.trim().toLowerCase();
   if (cfg.provider) return cfg.provider;
   if (envKey("nvidia", env)) return "nvidia";
@@ -88,7 +88,7 @@ export function detectProvider(cfg: CepheusConfig, env: NodeJS.ProcessEnv = proc
   if (envKey("openai", env) || env.OPENAI_BASE_URL?.trim()) return "openai";
   if (envKey("openrouter", env)) return "openrouter";
   if (envKey("groq", env)) return "groq";
-  return null;
+  return "cepheus";
 }
 
 export interface Resolved {
@@ -113,6 +113,8 @@ export function resolveProvider(
   const apiKey = fromEnv?.value ?? fromCfg ?? "";
   let baseUrl = cfg.baseUrls?.[preset.id]?.trim() || preset.baseUrl;
   if (preset.id === "openai" && env.OPENAI_BASE_URL?.trim()) baseUrl = env.OPENAI_BASE_URL.trim();
+  // Point the free tier at another proxy (e.g. a local run of proxy/server.mjs).
+  if (preset.id === "cepheus") baseUrl = env.CEPHEUS_PROXY_URL?.trim().replace(/\/+$/, "") || cfg.baseUrls?.cepheus?.trim() || CEPHEUS_PROXY_BASE;
   const sameProvider = !overrides.provider || overrides.provider === cfg.provider;
   const model =
     overrides.model?.trim() ||

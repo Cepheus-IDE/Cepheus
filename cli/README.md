@@ -11,11 +11,15 @@ cepheus
 
 You need Node.js 18 or newer. It works in Windows Terminal, PowerShell, cmd, macOS Terminal and Linux terminals.
 
-## Free ways to start
+## Free by default
 
-Cepheus needs a language model. These options cost nothing:
+`cepheus` works right after installing, with no key and no setup. When no provider or key is configured, it uses the **Cepheus Free** tier: NVIDIA Nemotron models (`nvidia/nemotron-3-ultra-550b-a55b` by default, plus `nvidia/nemotron-3.5-lightning-30b-a3b` and `nvidia/nemotron-3.5-super-vl-120b-a12b`) served through the Cepheus proxy at `https://api.cepheus.codes/v1`. The proxy holds the NVIDIA key, so you don't need one and none ships in the package.
 
-1. **NVIDIA developer key.** Sign in at [build.nvidia.com](https://build.nvidia.com), open a model and click **Get API Key** (the key starts with `nvapi-`). It's free for development and testing and has rate limits. Then run:
+The free tier has fair-use limits per user: **20 requests per minute and 400 per day**. When you hit one, Cepheus shows the proxy's message and when to retry. For higher limits, use your own key (below); any configured provider or key takes priority over the free tier. To pick it explicitly, use `cepheus -p cepheus`.
+
+## Other free ways
+
+1. **Your own NVIDIA developer key** (higher limits and the full model catalog). Sign in at [build.nvidia.com](https://build.nvidia.com), open a model and click **Get API Key** (the key starts with `nvapi-`). It's free for development and testing and has rate limits. Then run:
    ```bash
    export NVIDIA_API_KEY=nvapi-...        # PowerShell: $env:NVIDIA_API_KEY="nvapi-..."
    cepheus
@@ -26,7 +30,7 @@ Cepheus needs a language model. These options cost nothing:
    ```
 3. **Your own key.** Anthropic, Google Gemini, OpenAI, OpenRouter, Groq or any OpenAI-compatible server (llama.cpp, vLLM, ...). Some of these providers have free tiers. Check their pricing pages.
 
-If nothing is configured the first time you run `cepheus`, a short setup wizard walks you through these options. You can run it again any time with `cepheus login`.
+Run `cepheus login` any time to choose a provider, model and key.
 
 ## Usage
 
@@ -54,7 +58,7 @@ echo "explain this project" | cepheus     # the prompt can come from stdin
 | `--mode ask\|auto-edit\|turbo` | `ask` (the default) asks before file edits and commands. `auto-edit` applies edits without asking but still asks before commands. `turbo` never asks. |
 | `--plan` | Plan mode. The agent can only use read-only tools and replies with a plan. |
 | `-m`, `--model <id>` | A model id, or `auto` to try the suggested models in order. |
-| `-p`, `--provider <id>` | One of `nvidia`, `anthropic`, `gemini`, `openai`, `openrouter`, `groq`, `ollama`, `lmstudio`, `llamacpp`, `vllm`. |
+| `-p`, `--provider <id>` | One of `cepheus` (free, the default without keys), `nvidia`, `anthropic`, `gemini`, `openai`, `openrouter`, `groq`, `ollama`, `lmstudio`, `llamacpp`, `vllm`. |
 | `--json` | Print newline-delimited JSON events, for scripts. |
 | `-C`, `--cwd <dir>` | Workspace folder. Defaults to the current folder. |
 | `--agent <name>` | Use a custom agent from `.cepheus/agents/<name>.md`. |
@@ -135,7 +139,7 @@ Cepheus reads the same files as Cepheus IDE:
 }
 ```
 
-Environment variables take precedence over the file: `NVIDIA_API_KEY`, `ANTHROPIC_API_KEY`, `GEMINI_API_KEY` (or `GOOGLE_API_KEY`), `OPENAI_API_KEY`, `OPENROUTER_API_KEY`, `GROQ_API_KEY`, `OPENAI_BASE_URL` (any OpenAI-compatible server), `CEPHEUS_PROVIDER` and `CEPHEUS_MODEL`. Command-line flags take precedence over both.
+Environment variables take precedence over the file: `NVIDIA_API_KEY`, `ANTHROPIC_API_KEY`, `GEMINI_API_KEY` (or `GOOGLE_API_KEY`), `OPENAI_API_KEY`, `OPENROUTER_API_KEY`, `GROQ_API_KEY`, `OPENAI_BASE_URL` (any OpenAI-compatible server), `CEPHEUS_PROVIDER`, `CEPHEUS_MODEL` and `CEPHEUS_PROXY_URL` (the free-tier proxy, default `https://api.cepheus.codes/v1`, e.g. for a self-hosted run of `proxy/server.mjs`). Command-line flags take precedence over both.
 
 **Auto fallback.** With the model set to `auto`, or with `fallbackModels` in the config, a request that gets a rate limit (429), a server error (5xx), a timeout or "model not found" (404) is retried on the next model that uses the same message format. Error messages say what went wrong and what to try next.
 
@@ -162,7 +166,7 @@ await runAgentTurn(
 ## Security notes
 
 - **Keys stay with you.** No key is built into the package. Keys come from your environment or `~/.cepheus/config.json`, which is written with `0600` permissions where the OS supports them (on Windows the ACLs of your user profile protect it). Commands that print keys mask them.
-- Requests go directly from your machine to the provider you chose. Nothing is sent anywhere else, and there is no telemetry.
+- Requests go directly from your machine to the provider you chose. On the free tier that is the Cepheus proxy (`api.cepheus.codes`), which forwards them to NVIDIA and keeps only per-client request counts for its limits, not content. Nothing is sent anywhere else, and there is no telemetry.
 - In `ask` mode every edit and every command needs your approval. `turbo` (`--yes`) runs everything without asking, so use it only in folders and on tasks you trust, ideally under version control.
 - File tools are confined to the workspace. `run_command`, hooks and MCP servers run with your user's permissions, so review `.cepheus/hooks.json` and `.cepheus/mcp.json` in repositories you didn't write.
 - `/undo` only restores files the agent wrote with its file tools. It can't revert the effects of commands.

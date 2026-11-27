@@ -7,7 +7,7 @@ import { BROWSER_ONLY, type Backend } from "./types";
 import { idbDel, idbGet, idbKeys, idbSet } from "./idb";
 import { dispatch } from "../shims/bus";
 import { ALWAYS_SKIP, IgnoreStack, buildSearchRegex, isBinary, searchText } from "../../cli/src/web/ignore";
-import { aiOneshot, modelsList, openvsxMeta, openvsxSearch, openvsxText, setBrowserMode } from "../../cli/src/web/providers";
+import { aiOneshot, FREE_PROXY_ORIGINS, modelsList, openvsxMeta, openvsxSearch, openvsxText, setBrowserMode, setFreeProxy } from "../../cli/src/web/providers";
 import { AgentBridge, type CoreLike } from "../../cli/src/web/agentBridge";
 
 const PREFIX = "browser://";
@@ -330,7 +330,8 @@ function installFetchShim() {
         }
       })();
       let why = "the server refused requests from web pages (CORS) or is unreachable";
-      if (host.includes("nvidia.com")) why = "NVIDIA's API does not accept requests from web pages (CORS); use `cepheus web` for NVIDIA models";
+      if (host.includes("cepheus.codes")) why = "the free Cepheus tier only accepts pages served from https://cepheus.codes; add your own key in Settings";
+      else if (host.includes("nvidia.com")) why = "NVIDIA's API does not accept requests from web pages (CORS); use `cepheus web` for NVIDIA models";
       else if (host.endsWith(":11434")) why = "Ollama rejects web pages unless started with OLLAMA_ORIGINS set to this site's origin";
       throw new TypeError(`Failed to fetch ${host}: ${why}`);
     }
@@ -349,6 +350,9 @@ function historyKey(p: string) {
 
 export function createBrowserBackend(): Backend {
   setBrowserMode(true);
+  // Keyless use goes through the free proxy, whose CORS only allows the cepheus.codes pages;
+  // elsewhere the user gets the add-a-key guidance instead of a CORS failure.
+  setFreeProxy(FREE_PROXY_ORIGINS.includes(window.location.origin));
   installFetchShim();
   const agent = new AgentBridge({
     loadCore: async () => {

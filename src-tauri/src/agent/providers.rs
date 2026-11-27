@@ -126,7 +126,8 @@ impl ApiErr {
             404 | 410 => true,
             400 | 422 => {
                 d.contains("model")
-                    && ["not found", "does not exist", "not supported", "unknown model", "invalid model", "no such model"]
+                    // "not available": the Cepheus free proxy rejects models outside its allowlist.
+                    && ["not found", "does not exist", "not supported", "not available", "unknown model", "invalid model", "no such model"]
                         .iter()
                         .any(|s| d.contains(s))
             }
@@ -135,8 +136,16 @@ impl ApiErr {
     }
     /// Worth retrying the same request a moment later.
     fn transient(&self) -> bool {
+        // The free proxy's daily quota won't reset within a retry window.
+        if self.free_tier_limit() && self.detail.contains("daily") {
+            return false;
+        }
         matches!(self.kind, ErrKind::Timeout | ErrKind::Network)
             || matches!(self.code(), 408 | 409 | 425 | 429 | 500..=599)
+    }
+    /// A 429 from the Cepheus free proxy, whose message already says what to do ("Free tier limit…").
+    fn free_tier_limit(&self) -> bool {
+        self.code() == 429 && self.detail.starts_with("Free tier")
     }
     /// The key/endpoint is unusable (skip other models on the same endpoint).
     fn endpoint_dead(&self) -> bool {
@@ -208,6 +217,10 @@ fn short_reason(e: &ApiErr) -> String {
 pub fn friendly(cfg: &ProviderConfig, e: &ApiErr) -> String {
     let who = if cfg.model.is_empty() { provider_label(cfg) } else { format!("{} · {}", provider_label(cfg), cfg.model) };
     let own_nvidia_key = cfg.provider == "nvidia" && !cfg.api_key.trim().is_empty() && cfg.api_key != builtin_nvidia_key();
+    // The proxy's own message is complete and friendly; don't bury it under a generic one.
+    if e.free_tier_limit() {
+        return format!("{who}: {}", e.detail);
+    }
     let (what, hint): (String, String) = match e.kind {
         ErrKind::Timeout => ("The request timed out.".into(), "Retry, or pick a faster model (or Auto).".into()),
         ErrKind::Network if is_local(cfg) => (
@@ -644,7 +657,20 @@ pub fn builtin_nvidia_key() -> &'static str {
     env!("CEPHEUS_NVIDIA_KEY")
 }
 
-/// The user's own key wins; otherwise the built-in one.
+/// Cepheus free-model proxy: OpenAI-compatible, holds the NVIDIA key server-side, needs no
+/// Authorization header and rate-limits per client.
+pub const CEPHEUS_PROXY_BASE: &str = "https://api.cepheus.codes/v1";
+
+/// Proxy base URL; `CEPHEUS_PROXY_URL` overrides it (testing against a local proxy run).
+pub fn cepheus_proxy_base() -> String {
+    std::env::var("CEPHEUS_PROXY_URL")
+        .ok()
+        .map(|u| u.trim().trim_end_matches('/').to_string())
+        .filter(|u| !u.is_empty())
+        .unwrap_or_else(|| CEPHEUS_PROXY_BASE.to_string())
+}
+
+/// The user's own key wins; otherwise the built-in one (empty = use the free proxy).
 pub fn nvidia_key(user_key: &str) -> String {
     let k = user_key.trim();
     if k.is_empty() { builtin_nvidia_key().to_string() } else { k.to_string() }
@@ -654,7 +680,9 @@ fn nvidia_config(cfg: &ProviderConfig) -> ProviderConfig {
     let mut c = cfg.clone();
     c.api_key = nvidia_key(&cfg.api_key);
     if c.base_url.as_deref().map(str::trim).unwrap_or("").is_empty() {
-        c.base_url = Some(NVIDIA_BASE.into());
+        // No key at all: the free proxy. An empty api_key makes `openai()` / `list_models()`
+        // send no Authorization header, which is what the proxy expects.
+        c.base_url = Some(if c.api_key.is_empty() { cepheus_proxy_base() } else { NVIDIA_BASE.into() });
     }
     c
 }
@@ -709,7 +737,8 @@ async fn openai(
     messages.extend(history.iter().cloned());
     let mut body = json!({"model": cfg.model, "messages": messages});
     // NIM endpoints default to a small completion limit; OpenAI's newer models reject max_tokens.
-    if cfg.base_url.as_deref() == Some(NVIDIA_BASE) {
+    // Same for the free proxy (keyless nvidia), which caps the value at its own limit.
+    if cfg.base_url.as_deref() == Some(NVIDIA_BASE) || (cfg.provider == "nvidia" && cfg.api_key.is_empty()) {
         body["max_tokens"] = json!(max_tokens.min(16384));
     }
     if !tools.is_empty() {
@@ -1051,6 +1080,25 @@ mod tests {
         assert!(!http(401, "").transient() && http(401, "").endpoint_dead());
         let cfg = ProviderConfig { provider: "nvidia".into(), model: "google/gemma".into(), ..Default::default() };
         assert!(friendly(&cfg, &http(429, "")).contains("free tier"));
+        // The free proxy's 429 text is shown as-is; its daily limit is not retried.
+        let daily = http(429, "Free tier daily limit of 400 requests reached. It resets within 3h.");
+        assert!(friendly(&cfg, &daily).contains(": Free tier daily limit") && !daily.transient());
+        assert!(http(429, "Free tier limit: 20 requests per minute.").transient());
+        assert!(http(400, "Model not available on the free tier. Use one of: a, b").model_unavailable());
+    }
+
+    #[test]
+    fn keyless_nvidia_uses_free_proxy() {
+        let c = nvidia_config(&ProviderConfig { provider: "nvidia".into(), ..Default::default() });
+        if builtin_nvidia_key().is_empty() {
+            assert_eq!(c.base_url.as_deref(), Some(cepheus_proxy_base().as_str()));
+            assert!(c.api_key.is_empty(), "proxy requests must carry no Authorization header");
+        } else {
+            assert_eq!(c.base_url.as_deref(), Some(NVIDIA_BASE));
+        }
+        // A user key always goes straight to NVIDIA.
+        let own = nvidia_config(&ProviderConfig { provider: "nvidia".into(), api_key: "nvapi-x".into(), ..Default::default() });
+        assert_eq!((own.base_url.as_deref(), own.api_key.as_str()), (Some(NVIDIA_BASE), "nvapi-x"));
     }
 
     #[test]

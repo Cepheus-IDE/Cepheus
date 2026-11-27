@@ -5,8 +5,8 @@ import * as path from "node:path";
 import { parseArgs } from "./cli/args.js";
 import { c, setColor } from "./cli/ansi.js";
 import { VERSION } from "./version.js";
-import { loadConfig, resolveProvider, type Resolved } from "./node/config.js";
-import { FREE_OPTIONS, runDoctor, runLogin, runModels, showConfig } from "./cli/commands.js";
+import { configExists, loadConfig, resolveProvider, type Resolved } from "./node/config.js";
+import { FREE_OPTIONS, FREE_TIER_NOTICE, runDoctor, runLogin, runModels, showConfig } from "./cli/commands.js";
 import { Input } from "./cli/input.js";
 import { Controller, runJson, runOnce, runRepl } from "./cli/session.js";
 import { runWeb } from "./cli/web.js";
@@ -15,6 +15,7 @@ const HELP = () => `${c.bold("Cepheus")} ${c.gray("v" + VERSION)} — an open-so
 
 ${c.bold("Usage")}
   cepheus                         interactive session in the current folder
+                                  (no setup needed: uses the free Cepheus tier when no key is configured)
   cepheus "<task>"                run one task, then exit
   cepheus login                   choose a provider, model and key (saved to ~/.cepheus/config.json)
   cepheus models                  list the models of the current provider (live)
@@ -28,7 +29,7 @@ ${c.bold("Options")}
       --mode ask|auto-edit|turbo  approval mode (default: ask)
       --plan                      plan mode: read-only research that ends with a plan
   -m, --model <id>                model id, or "auto" for fallback across suggested models
-  -p, --provider <id>             nvidia, anthropic, gemini, openai, openrouter, groq, ollama, lmstudio, llamacpp, vllm
+  -p, --provider <id>             cepheus (free), nvidia, anthropic, gemini, openai, openrouter, groq, ollama, lmstudio, llamacpp, vllm
       --json                      print newline-delimited JSON events (for scripts and tools)
   -C, --cwd <dir>                 workspace folder (default: current folder)
       --agent <name>              use a custom agent from .cepheus/agents/<name>.md
@@ -47,7 +48,8 @@ ${c.bold("Examples")}
 
 ${c.bold("Environment")}
   NVIDIA_API_KEY, ANTHROPIC_API_KEY, GEMINI_API_KEY, OPENAI_API_KEY, OPENROUTER_API_KEY, GROQ_API_KEY,
-  OPENAI_BASE_URL, CEPHEUS_PROVIDER, CEPHEUS_MODEL, CEPHEUS_HOME (default ~/.cepheus), NO_COLOR
+  OPENAI_BASE_URL, CEPHEUS_PROVIDER, CEPHEUS_MODEL, CEPHEUS_HOME (default ~/.cepheus), NO_COLOR,
+  CEPHEUS_PROXY_URL (free-tier proxy, default https://api.cepheus.codes/v1)
 
 Docs: https://github.com/Cepheus-IDE/Cepheus/tree/main/cli#readme`;
 
@@ -133,6 +135,11 @@ async function main(): Promise<number> {
       else process.stderr.write(`${c.red(msg)}\n\n${FREE_OPTIONS}\n`);
       return 1;
     }
+  }
+
+  // Nothing configured: say once per run that the free tier is in use and how to raise the limits.
+  if (resolved.preset.id === "cepheus" && !args.provider && !configExists() && !args.json) {
+    process.stderr.write(FREE_TIER_NOTICE + "\n\n");
   }
 
   const ctl = new Controller({

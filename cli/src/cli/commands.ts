@@ -12,17 +12,25 @@ import { c, sym } from "./ansi.js";
 const out = (s = "") => process.stdout.write(s + "\n");
 
 export const FREE_OPTIONS = `${c.bold("Ways to start for free")}
-  ${c.cyan("1)")} ${c.bold("NVIDIA developer key")} — sign in at ${c.cyan("https://build.nvidia.com")}, open a model and
-     click "Get API Key" (starts with nvapi-). Free for development and testing; rate limited.
-  ${c.cyan("2)")} ${c.bold("Local models")} — install Ollama (${c.cyan("https://ollama.com")}) and run
+  ${c.cyan("1)")} ${c.bold("Cepheus Free tier")} (the default) — nothing to set up: NVIDIA Nemotron models through the
+     Cepheus proxy, no key needed. Fair-use limits: 20 requests per minute, 400 per day.
+  ${c.cyan("2)")} ${c.bold("Your own NVIDIA developer key")} — higher limits and the full catalog. Sign in at
+     ${c.cyan("https://build.nvidia.com")}, open a model and click "Get API Key" (starts with nvapi-).
+  ${c.cyan("3)")} ${c.bold("Local models")} — install Ollama (${c.cyan("https://ollama.com")}) and run
      ${c.gray("ollama pull qwen2.5-coder")}, or start LM Studio's local server. Runs on your machine,
      no key and no internet needed (needs a reasonably powerful computer).
-  ${c.cyan("3)")} ${c.bold("Bring your own key")} — Anthropic, Google Gemini, OpenAI, OpenRouter, Groq or any
+  ${c.cyan("4)")} ${c.bold("Bring your own key")} — Anthropic, Google Gemini, OpenAI, OpenRouter, Groq or any
      OpenAI-compatible endpoint. Some providers have free tiers; check their pricing pages.`;
+
+/** Shown when Cepheus runs on the free tier because nothing is configured yet. */
+export const FREE_TIER_NOTICE = `${c.bold("Welcome to Cepheus!")} You're on the ${c.bold("Cepheus Free tier")} (NVIDIA Nemotron, no key needed).
+${c.gray("Fair-use limits: 20 requests/min, 400/day. For higher limits set NVIDIA_API_KEY (free at https://build.nvidia.com)")}
+${c.gray("or another provider's key, or run `cepheus login`.")}`;
 
 function presetLine(p: ProviderPreset, cfg: CepheusConfig): string {
   const env = envKey(p.id);
-  const key = env ? c.green(`key from ${env.name}`) : cfg.keys?.[p.id] ? c.green("key saved") : p.needsKey ? c.gray("needs a key") : c.gray("local, no key");
+  const none = p.local ? "local, no key" : "free, no key (fair-use limits)";
+  const key = env ? c.green(`key from ${env.name}`) : cfg.keys?.[p.id] ? c.green("key saved") : p.needsKey ? c.gray("needs a key") : c.gray(none);
   return `${p.label.padEnd(18)} ${key}`;
 }
 
@@ -32,14 +40,15 @@ export async function runLogin(input: Input, opts: { firstRun?: boolean } = {}):
   if (opts.firstRun) {
     out();
     out(c.bold("Welcome to Cepheus") + c.gray(" — an AI coding agent for your terminal."));
-    out("It needs a language model to work. Let's set one up (you can change it later with `cepheus login`).");
+    out("It works right away on the free Cepheus tier (fair-use limits); pick another provider or add your own key");
+    out("for higher limits. You can change this any time with `cepheus login`.");
     out();
     out(FREE_OPTIONS);
     out();
   } else {
     showConfig(cfg);
   }
-  const order = ["nvidia", "ollama", "lmstudio", "anthropic", "gemini", "openai", "openrouter", "groq", "llamacpp", "vllm"];
+  const order = ["cepheus", "nvidia", "ollama", "lmstudio", "anthropic", "gemini", "openai", "openrouter", "groq", "llamacpp", "vllm"];
   const presets = order.map((id) => presetById(id)!).filter(Boolean);
   const current = Math.max(0, presets.findIndex((p) => p.id === cfg.provider));
   const idx = await input.choose(c.bold("Which provider do you want to use?"), presets.map((p) => presetLine(p, cfg)), current);
@@ -116,7 +125,7 @@ export function showConfig(cfg: CepheusConfig = loadConfig()) {
   for (const [k, v] of Object.entries(cfg.baseUrls ?? {})) out(`  baseUrl   ${k.padEnd(11)} ${v}`);
   const envs = ["NVIDIA_API_KEY", "ANTHROPIC_API_KEY", "GEMINI_API_KEY", "OPENAI_API_KEY", "OPENROUTER_API_KEY", "GROQ_API_KEY"].filter((n) => process.env[n]?.trim());
   for (const n of envs) out(`  env       ${n.padEnd(11)} ${mask(process.env[n])}`);
-  for (const n of ["OPENAI_BASE_URL", "CEPHEUS_PROVIDER", "CEPHEUS_MODEL"]) if (process.env[n]?.trim()) out(`  env       ${n} = ${process.env[n]}`);
+  for (const n of ["OPENAI_BASE_URL", "CEPHEUS_PROVIDER", "CEPHEUS_MODEL", "CEPHEUS_PROXY_URL"]) if (process.env[n]?.trim()) out(`  env       ${n} = ${process.env[n]}`);
   out();
 }
 
@@ -200,7 +209,13 @@ export async function runDoctor(root: string, overrides: { provider?: string; mo
   if (!resolved) bad("Provider", "none configured: run `cepheus login` or set NVIDIA_API_KEY");
   else {
     const r = resolved;
-    const key = r.keySource ? `key ${mask(r.config.apiKey)} from ${r.keySource}` : r.preset.needsKey ? "no key" : "no key needed";
+    const key = r.keySource
+      ? `key ${mask(r.config.apiKey)} from ${r.keySource}`
+      : r.preset.needsKey
+        ? "no key"
+        : r.preset.id === "cepheus"
+          ? "free tier, no key needed (20 requests/min, 400/day)"
+          : "no key needed";
     if (r.missingKey) bad(`Provider ${r.preset.label}`, `${key}: set ${r.preset.envKey} or run \`cepheus login\``);
     else {
       ok(`Provider ${r.preset.label} · ${r.config.model}`, `${key}${r.config.fallbacks?.length ? ` · ${r.config.fallbacks.length} fallback models` : ""}`);

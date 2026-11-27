@@ -4,6 +4,8 @@
  * server and the browser backend each pass their own ToolHost and event sink.
  */
 
+import { freeProxyConfig, NO_FREE_PROXY } from "./providers.js";
+
 export interface CoreLike {
   createSession: (...args: any[]) => any;
   runAgentTurn: (opts: any, emit: (ev: any) => void, signal?: AbortSignal) => Promise<any>;
@@ -57,16 +59,7 @@ export class AgentBridge {
     let workspace = String(req.workspace ?? "").trim();
     if (!workspace) throw new Error("Open a folder first.");
     if (this.o.checkWorkspace) workspace = this.o.checkWorkspace(workspace);
-    const config = { ...(req.config ?? {}) };
-    if (config.provider === "nvidia" && !String(config.apiKey ?? "").trim()) {
-      const k = this.o.defaultNvidiaKey?.();
-      if (!k) {
-        throw new Error(
-          "No API key configured. The free built-in NVIDIA key ships only with the desktop app: add your own NVIDIA key (free at build.nvidia.com) or another provider in Settings.",
-        );
-      }
-      config.apiKey = k;
-    }
+    const config = this.withKey(req.config);
     if (!["openai", "nvidia"].includes(config.provider) && !String(config.apiKey ?? "").trim()) {
       throw new Error("No API key configured. Open Settings (gear icon) and add your API key.");
     }
@@ -193,10 +186,21 @@ export class AgentBridge {
     };
   }
 
+  /** Keyless NVIDIA: the server's key when it has one, else the free Cepheus proxy (where its CORS allows it). */
+  private withKey(cfg: any): any {
+    const config = { ...(cfg ?? {}) };
+    if (config.provider !== "nvidia" || String(config.apiKey ?? "").trim()) return config;
+    const k = this.o.defaultNvidiaKey?.();
+    if (k) return { ...config, apiKey: k };
+    const free = freeProxyConfig(config);
+    if (!free) throw new Error(`No API key configured. ${NO_FREE_PROXY}`);
+    return free;
+  }
+
   async oneshot(config: any, system: string, prompt: string, maxTokens?: number | null): Promise<string | undefined> {
     const core = await this.loadCore();
     const f = core?.aiOneshot ?? core?.oneshot;
-    return typeof f === "function" ? f(config, system, prompt, maxTokens ?? 8000) : undefined;
+    return typeof f === "function" ? f(this.withKey(config), system, prompt, maxTokens ?? 8000) : undefined;
   }
 
   disposeAll() {

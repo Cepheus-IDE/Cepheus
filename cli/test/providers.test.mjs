@@ -235,3 +235,59 @@ test("expandAuto builds a candidate chain from the preset", () => {
   const d = expandAuto({ provider: "openai", source: "ollama", model: "llama3" }, ["qwen"]);
   assert.deepEqual([d.model, ...d.fallbacks.map((f) => f.model)], ["llama3", "qwen"]);
 });
+
+test("free Cepheus preset: default without keys, env override, keys take priority", async () => {
+  const { resolveProvider, detectProvider } = await import("../dist/node/config.js");
+  const { CEPHEUS_PROXY_BASE, CEPHEUS_MODELS, presetById } = await import("../dist/core/providers.js");
+  const p = presetById("cepheus");
+  assert.equal(p.label, "Cepheus Free (NVIDIA Nemotron)");
+  assert.equal(p.needsKey, false);
+  assert.equal(CEPHEUS_PROXY_BASE, "https://api.cepheus.codes/v1");
+  assert.equal(CEPHEUS_MODELS.length, 3);
+
+  const r = resolveProvider({}, {}, {});
+  assert.equal(r.preset.id, "cepheus");
+  assert.equal(r.missingKey, false);
+  assert.equal(r.config.provider, "openai");
+  assert.equal(r.config.baseUrl, CEPHEUS_PROXY_BASE);
+  assert.equal(r.config.apiKey, "");
+  assert.equal(r.config.model, "nvidia/nemotron-3-ultra-550b-a55b");
+  // No Authorization header goes to the proxy; max_tokens is sent so answers aren't cut short.
+  const req = buildOpenAIRequest(r.config, "sys", [], history, 4000);
+  assert.equal(req.url, "https://api.cepheus.codes/v1/chat/completions");
+  assert.deepEqual(req.headers, {});
+  assert.equal(req.body.max_tokens, 4000);
+
+  assert.equal(resolveProvider({}, {}, { CEPHEUS_PROXY_URL: "http://127.0.0.1:8787/v1/" }).config.baseUrl, "http://127.0.0.1:8787/v1");
+  // An own key (env or config) or a configured provider wins.
+  assert.equal(detectProvider({}, { NVIDIA_API_KEY: "nvapi-x" }), "nvidia");
+  assert.equal(detectProvider({ provider: "anthropic" }, {}), "anthropic");
+  assert.equal(detectProvider({}, {}), "cepheus");
+});
+
+test("free tier errors: proxy 429 text shown as-is, daily limit not retried, disallowed model unavailable", () => {
+  const cfg = { provider: "openai", label: "Cepheus Free (NVIDIA Nemotron)", model: "m" };
+  const minute = new ApiError("http", "Free tier limit: 20 requests per minute. Try again in 30s, or add your own NVIDIA key for higher limits.", 429, 30);
+  assert.equal(friendly(cfg, minute), `Cepheus Free (NVIDIA Nemotron) · m: ${minute.detail}`);
+  assert.equal(minute.transient(), true);
+  const daily = new ApiError("http", "Free tier daily limit of 400 requests reached. It resets within 5h.", 429);
+  assert.equal(daily.transient(), false);
+  assert.equal(new ApiError("http", "Model not available on the free tier. Use one of: a, b", 400).modelUnavailable(), true);
+});
+
+test("keyless NVIDIA config goes to the free proxy (desktop/web parity)", async () => {
+  const { nvidiaConfig, CEPHEUS_PROXY_BASE } = await import("../dist/core/providers.js");
+  const saved = process.env.CEPHEUS_PROXY_URL;
+  delete process.env.CEPHEUS_PROXY_URL;
+  try {
+    assert.equal(nvidiaConfig({ provider: "nvidia", model: "m" }).baseUrl, CEPHEUS_PROXY_BASE);
+    assert.equal(nvidiaConfig({ provider: "nvidia", model: "m", apiKey: "k" }).baseUrl, NVIDIA_BASE);
+    const { freeProxyConfig, setFreeProxy } = await import("../dist/web/providers.js");
+    assert.deepEqual(freeProxyConfig({ provider: "nvidia", apiKey: "" }), { provider: "nvidia", apiKey: "", baseUrl: CEPHEUS_PROXY_BASE });
+    setFreeProxy(false); // browser page not on cepheus.codes
+    assert.equal(freeProxyConfig({ provider: "nvidia" }), null);
+    setFreeProxy(true);
+  } finally {
+    if (saved !== undefined) process.env.CEPHEUS_PROXY_URL = saved;
+  }
+});

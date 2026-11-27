@@ -98,6 +98,8 @@ export class TerminalRenderer {
   private atLineStart = true;
   readonly spinner: Spinner;
   usage = { input: 0, output: 0 };
+  /** True when the current message's text arrived as deltas. */
+  private streamedText = false;
 
   constructor(
     private out: NodeJS.WriteStream,
@@ -146,13 +148,14 @@ export class TerminalRenderer {
           this.streaming = true;
         }
         this.write(ev.text);
+        this.streamedText = true;
         break;
       case "text":
-        if (this.streaming) {
-          this.endStream();
-        } else {
-          this.line(ev.text.trimEnd());
-        }
+        // Providers may emit thinking between the deltas and the final text,
+        // which ends the stream early; the text was still printed already.
+        if (this.streaming || this.streamedText) this.endStream();
+        else this.line(ev.text.trimEnd());
+        this.streamedText = false;
         break;
       case "thinking": {
         if (this.opts.verbose) this.line(c.gray(c.italic(`${sym.think} ${ev.text.trim()}`)));

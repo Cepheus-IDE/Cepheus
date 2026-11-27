@@ -1,6 +1,6 @@
 [package]
 name = "cepheus-ide"
-version = "0.1.0"
+version = "0.2.0"
 description = "Cepheus IDE - a lightweight agentic code editor"
 edition = "2021"
 license = "MIT"

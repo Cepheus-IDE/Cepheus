@@ -317,7 +317,7 @@ function AiProviderBlock({ s }: { s: Settings }) {
         <span className="grow"><LazyText id="ai-key" type={showKey ? "text" : "password"} placeholder={meta.keyHint} value={s.keys[p]} disabled={isManaged("keys")} onCommit={(v) => change({ keys: { ...get().settings.keys, [p]: v.trim() } })} /></span>
         <button className="btn" aria-label={showKey ? "Hide key" : "Show key"} onClick={() => setShowKey((v) => !v)}><i className={`codicon codicon-eye${showKey ? "-closed" : ""}`} /></button>
       </div>
-      <div className="muted small">{p === "nvidia" ? "Leave empty to use the free built-in access. Add your own key from build.nvidia.com for higher limits." : "Stored locally in your app config folder. Requests go directly from this computer to the provider."}</div>
+      <div className="muted small">{p === "nvidia" ? "No key needed: free access works out of the box (fair-use limits, Nemotron models). Add your own key from build.nvidia.com for higher limits and the full model catalog." : "Stored locally in your app config folder. Requests go directly from this computer to the provider."}</div>
 
       <label htmlFor="ai-model">Model {lock("models")}</label>
       {p === "nvidia" ? (
@@ -333,7 +333,7 @@ function AiProviderBlock({ s }: { s: Settings }) {
           <div className="muted small">Suggestions: {MODEL_SUGGESTIONS[p].join(" · ")}</div>
         </>
       )}
-      {p === "nvidia" && <div className="muted small">{nv.error ? `Couldn’t load models: ${nv.error}` : nv.models ? `${nv.models.length} models available, loaded live from NVIDIA.` : "Loading models from NVIDIA…"}</div>}
+      {p === "nvidia" && <div className="muted small">{nv.error ? `Couldn’t load models: ${nv.error}` : nv.models ? `${nv.models.length} models available, loaded live from ${s.keys.nvidia.trim() ? "NVIDIA" : "the free tier"}.` : "Loading models from NVIDIA…"}</div>}
 
       <label htmlFor="ai-base">Base URL <span className="muted">(optional)</span> {lock("baseUrls")}</label>
       <LazyText id="ai-base" placeholder={meta.baseHint} value={s.baseUrls[p]} disabled={isManaged("baseUrls")} onCommit={(v) => change({ baseUrls: { ...get().settings.baseUrls, [p]: v.trim() } })} />

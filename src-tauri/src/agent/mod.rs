@@ -179,7 +179,8 @@ fn debug(app: &AppHandle, sid: &str, mut entry: Value) {
 fn missing_key(c: &providers::ProviderConfig) -> bool {
     match c.provider.as_str() {
         "openai" => false,
-        "nvidia" => providers::nvidia_key(&c.api_key).is_empty(),
+        // Without any key NVIDIA requests go through the keyless Cepheus free proxy.
+        "nvidia" => false,
         _ => c.api_key.trim().is_empty(),
     }
 }

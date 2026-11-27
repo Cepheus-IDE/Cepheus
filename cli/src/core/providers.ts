@@ -12,6 +12,21 @@ export const NVIDIA_BASE = "https://integrate.api.nvidia.com/v1";
 export const NVIDIA_DEFAULT_MODEL = "nvidia/nemotron-3-ultra-550b-a55b";
 export const ANTHROPIC_VERSION = "2026-10-21";
 
+/**
+ * Cepheus free-model proxy: OpenAI-compatible, keeps the NVIDIA key server-side, needs no
+ * Authorization header and applies per-client fair-use limits (20 requests/min, 400/day).
+ */
+export const CEPHEUS_PROXY_BASE = "https://api.cepheus.codes/v1";
+/** The only models the proxy serves. */
+export const CEPHEUS_MODELS = [NVIDIA_DEFAULT_MODEL, "nvidia/nemotron-3.5-lightning-30b-a3b", "nvidia/nemotron-3.5-super-vl-120b-a12b"];
+
+/** Proxy base URL; `CEPHEUS_PROXY_URL` overrides it where an environment exists (Node). */
+export function cepheusProxyBase(): string {
+  // No `node:*` import in the core: read the env only when a `process` global exists.
+  const env = (globalThis as any).process?.env?.CEPHEUS_PROXY_URL;
+  return (typeof env === "string" && env.trim() ? env.trim() : CEPHEUS_PROXY_BASE).replace(/\/+$/, "");
+}
+
 // ---------------------------------------------------------------------------------------------
 // Presets
 // ---------------------------------------------------------------------------------------------
@@ -32,6 +47,16 @@ export interface ProviderPreset {
 }
 
 export const PRESETS: ProviderPreset[] = [
+  {
+    // Default when no key is configured: works with no setup.
+    id: "cepheus",
+    label: "Cepheus Free (NVIDIA Nemotron)",
+    kind: "openai",
+    baseUrl: CEPHEUS_PROXY_BASE,
+    needsKey: false,
+    defaultModel: NVIDIA_DEFAULT_MODEL,
+    models: CEPHEUS_MODELS,
+  },
   {
     id: "nvidia",
     label: "NVIDIA NIM",
@@ -183,14 +208,21 @@ export class ApiError extends Error {
     if (this.code === 400 || this.code === 422)
       return (
         d.includes("model") &&
-        ["not found", "does not exist", "not supported", "unknown model", "invalid model", "no such model"].some((s) => d.includes(s))
+        // "not available": the Cepheus free proxy rejects models outside its allowlist.
+        ["not found", "does not exist", "not supported", "not available", "unknown model", "invalid model", "no such model"].some((s) => d.includes(s))
       );
     return false;
   }
   /** Worth retrying the same request a moment later. */
   transient(): boolean {
+    // The free proxy's daily quota won't reset within a retry window.
+    if (this.freeTierLimit() && this.detail.includes("daily")) return false;
     const c = this.code;
     return this.kind === "timeout" || this.kind === "network" || [408, 409, 425, 429].includes(c) || (c >= 500 && c <= 599);
+  }
+  /** A 429 from the Cepheus free proxy, whose message already says what to do ("Free tier limit…"). */
+  freeTierLimit(): boolean {
+    return this.code === 429 && this.detail.startsWith("Free tier");
   }
   /** The key/endpoint is unusable (skip other models on the same endpoint). */
   endpointDead(): boolean {
@@ -239,6 +271,8 @@ function shortReason(e: ApiError): string {
 /** Maps any provider error to a clear message with a suggested action. */
 export function friendly(cfg: ProviderConfig, e: ApiError): string {
   const who = cfg.model ? `${providerLabel(cfg)} · ${cfg.model}` : providerLabel(cfg);
+  // The proxy's own message is complete and friendly; don't bury it under a generic one.
+  if (e.freeTierLimit()) return `${who}: ${e.detail}`;
   let what: string;
   let hint: string;
   switch (e.kind) {
@@ -673,8 +707,10 @@ async function anthropic(ctx: Ctx, cfg: ProviderConfig, system: string, tools: T
 // NVIDIA NIM - OpenAI-compatible (the user's own key; nothing is embedded)
 // ---------------------------------------------------------------------------------------------
 
+/** Without a key (and without an explicit base URL) NVIDIA requests go to the keyless free proxy. */
 export function nvidiaConfig(cfg: ProviderConfig): ProviderConfig {
-  return { ...cfg, apiKey: (cfg.apiKey ?? "").trim(), baseUrl: (cfg.baseUrl ?? "").trim() || NVIDIA_BASE };
+  const apiKey = (cfg.apiKey ?? "").trim();
+  return { ...cfg, apiKey, baseUrl: (cfg.baseUrl ?? "").trim() || (apiKey ? NVIDIA_BASE : cepheusProxyBase()) };
 }
 
 /** Models that cannot chat (embeddings, guards, detectors, image/audio models, ...) are filtered out. */
@@ -705,7 +741,9 @@ export function buildOpenAIRequest(cfg: ProviderConfig, system: string, tools: T
   const url = `${base(cfg, "https://api.openai.com/v1")}/chat/completions`;
   const body: any = { model: cfg.model, messages: [{ role: "system", content: system }, ...history] };
   // NIM endpoints default to a small completion limit; OpenAI's newer models reject max_tokens.
-  if (base(cfg, "") === NVIDIA_BASE) body.max_tokens = Math.min(maxTokens, 16384);
+  // The free proxy needs it too (it caps the value at its own limit).
+  const root = base(cfg, "");
+  if (root === NVIDIA_BASE || root === cepheusProxyBase() || cfg.source === "cepheus") body.max_tokens = Math.min(maxTokens, 16384);
   if (tools.length)
     body.tools = tools.map((t) => ({ type: "function", function: { name: t.name, description: t.description, parameters: t.schema } }));
   if (cfg.effort && openaiReasoning(cfg.model)) body.reasoning_effort = cfg.effort === "low" ? "low" : cfg.effort === "medium" ? "medium" : "high";

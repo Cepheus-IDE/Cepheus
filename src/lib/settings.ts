@@ -496,7 +496,8 @@ export function providerConfig(s: Settings, modelOverride?: string, effortOverri
 }
 
 export const MODEL_SUGGESTIONS: Record<Provider, string[]> = {
-  nvidia: [NVIDIA_DEFAULT_MODEL, "minimaxai/minimax-m3.1-flash", "nvidia/nemotron-3.5-lightning-30b-a3b", "stepfun-ai/step-5-preview"],
+  // The models the keyless free tier serves (they also work with an own key).
+  nvidia: [NVIDIA_DEFAULT_MODEL, "nvidia/nemotron-3.5-lightning-30b-a3b", "nvidia/nemotron-3.5-super-vl-120b-a12b"],
   anthropic: ["claude-opus-5-5", "claude-sonnet-5-5", "claude-haiku-5-5", "claude-fable-5-2"],
   openai: ["gpt-5", "gpt-5-mini", "o4-mini", "llama3.1 (Ollama)", "qwen2.5-coder (Ollama)"],
   gemini: ["gemini-3-pro-preview", "gemini-2.5-pro", "gemini-2.5-flash"],

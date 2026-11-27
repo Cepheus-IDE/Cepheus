@@ -297,7 +297,7 @@ function runCli(args, { cwd, env, onLine, input } = {}) {
 
 function cliEnv(home, url) {
   const env = { ...process.env, CEPHEUS_HOME: home, CEPHEUS_PROVIDER: "openai", CEPHEUS_MODEL: "fake-model", OPENAI_BASE_URL: url, NO_COLOR: "1" };
-  for (const k of ["OPENAI_API_KEY", "NVIDIA_API_KEY", "ANTHROPIC_API_KEY", "GEMINI_API_KEY", "GOOGLE_API_KEY", "FORCE_COLOR"]) delete env[k];
+  for (const k of ["CEPHEUS_PROXY_URL", "OPENAI_API_KEY", "NVIDIA_API_KEY", "ANTHROPIC_API_KEY", "GEMINI_API_KEY", "GOOGLE_API_KEY", "FORCE_COLOR"]) delete env[k];
   return env;
 }
 
@@ -351,7 +351,7 @@ test("CLI --json: approvals over stdin", async () => {
   }
 });
 
-test("CLI one-shot human output and missing-provider message", async () => {
+test("CLI one-shot human output", async () => {
   const ws = workspace();
   const home = tempDir();
   const srv = await fakeOpenAI(SCRIPT);
@@ -366,15 +366,41 @@ test("CLI one-shot human output and missing-provider message", async () => {
     assert.match(r.out, /✗ read_file \.\.\/outside\.txt → Path '\.\.\/outside\.txt' is outside the workspace/);
     assert.match(r.out, /Done: changed \*\*a\.txt\*\*\./);
     assert.doesNotMatch(r.out, /\x1b\[/, "NO_COLOR disables ANSI codes");
+  } finally {
+    await srv.close();
+    ws.cleanup();
+    home.cleanup();
+  }
+});
 
+test("CLI with no config and no keys uses the free Cepheus preset (no Authorization header)", async () => {
+  const ws = workspace();
+  const home = tempDir();
+  const srv = await fakeOpenAI([{ content: "Hello from the free tier." }]);
+  try {
     const env = cliEnv(home.dir, srv.url);
-    delete env.CEPHEUS_PROVIDER;
-    delete env.OPENAI_BASE_URL;
-    const r2 = await runCli(["do something"], { cwd: ws.dir, env, input: "" });
-    assert.equal(r2.code, 1);
-    assert.match(r2.err, /No model provider configured/);
-    assert.match(r2.err, /build\.nvidia\.com/);
-    assert.match(r2.err, /Ollama/);
+    for (const k of ["CEPHEUS_PROVIDER", "CEPHEUS_MODEL", "OPENAI_BASE_URL"]) delete env[k];
+    env.CEPHEUS_PROXY_URL = srv.url + "/"; // trailing slash is trimmed
+    const r = await runCli(["say hello"], { cwd: ws.dir, env, input: "" });
+    assert.equal(r.code, 0, r.err + r.out);
+    assert.match(r.out, /Hello from the free tier./);
+    assert.match(r.err, /Cepheus Free tier/);
+    assert.match(r.err, /NVIDIA_API_KEY/);
+    assert.equal(srv.requests.length, 1);
+    assert.equal(srv.requests[0].url, "/v1/chat/completions");
+    assert.equal(srv.requests[0].headers.authorization, undefined);
+    assert.equal(srv.requests[0].body.model, "nvidia/nemotron-3-ultra-550b-a55b");
+
+    const m = await runCli(["models", "--json"], { cwd: ws.dir, env, input: "" });
+    assert.equal(m.code, 0, m.err + m.out);
+    assert.deepEqual(JSON.parse(m.out), ["fake-model"]);
+
+    // A provider that needs a key still explains the options, the free tier first.
+    const r3 = await runCli(["do something"], { cwd: ws.dir, env: { ...env, CEPHEUS_PROVIDER: "anthropic" }, input: "" });
+    assert.equal(r3.code, 1);
+    assert.match(r3.err, /No API key for Anthropic/);
+    assert.match(r3.err, /Cepheus Free tier/);
+    assert.match(r3.err, /build.nvidia.com/);
   } finally {
     await srv.close();
     ws.cleanup();
