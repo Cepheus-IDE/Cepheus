@@ -388,7 +388,7 @@
       <div>
         <p class="eyebrow reveal-up">Built in Rust</p>
         <h2 class="reveal-up">Light where it counts<span class="dot">.</span></h2>
-        <p class="sub reveal-up muted-dark">The core of Cepheus is a native Rust program. It does not ship its own browser: the interface runs on Microsoft Edge WebView2, which is already part of Windows.</p>
+        <p class="sub reveal-up muted-dark">The core of Cepheus is a native Rust program. It does not ship its own browser: the interface runs on the web view your system already has, WebView2 on Windows and WebKit on macOS and Linux.</p>
         <div class="nums">
           <div class="num reveal-up"><b><span data-count="10">10</span><small>MB</small></b><span>Private memory used by the Rust core</span><div class="bar"><i class="grow-line" style="width:12%"></i></div></div>
           <div class="num reveal-up"><b><span data-count="9">9</span><small>MB</small></b><span>Size of the app program</span><div class="bar"><i class="grow-line" style="width:10%"></i></div></div>
@@ -400,7 +400,7 @@
           <path id="w1" class="wire" d="M200 96 C 200 150, 200 160, 200 214"/>
           <path id="w2" class="wire" d="M90 254 C 20 254, 20 56, 90 56"/>
           <g><rect class="box" x="90" y="16" width="220" height="80" rx="18"/><text class="lbl" x="200" y="52" text-anchor="middle">Rust core</text><text class="sm" x="200" y="74" text-anchor="middle">files · git · terminals · agent</text></g>
-          <g><rect class="box" x="90" y="214" width="220" height="80" rx="18"/><text class="lbl" x="200" y="250" text-anchor="middle">WebView2</text><text class="sm" x="200" y="272" text-anchor="middle">built into Windows</text></g>
+          <g><rect class="box" x="90" y="214" width="220" height="80" rx="18"/><text class="lbl" x="200" y="250" text-anchor="middle">System web view</text><text class="sm" x="200" y="272" text-anchor="middle">WebView2 · WebKit</text></g>
           <circle r="5" fill="#e5352b"><animateMotion dur="2.6s" repeatCount="indefinite"><mpath href="#w1"/></animateMotion></circle>
           <circle r="5" fill="#ffffff"><animateMotion dur="2.6s" begin="1.3s" repeatCount="indefinite" keyPoints="1;0" keyTimes="0;1" calcMode="linear"><mpath href="#w1"/></animateMotion></circle>
           <circle r="4" fill="#9a9a96"><animateMotion dur="5s" repeatCount="indefinite"><mpath href="#w2"/></animateMotion></circle>
@@ -433,6 +433,7 @@
       </div>
       <div class="reveal-up">
         <div class="mhead">Included free <span class="tag">No key</span></div>
+        <p class="mnote">Fair use: 20 requests a minute and 400 a day, in the app, the CLI and the web.</p>
         <ul class="mlist">
           <li><span>nvidia/nemotron-3-ultra</span><span>default</span></li>
           <li><span>nvidia/nemotron-3.5-lightning</span><span>fast</span></li>
@@ -516,10 +517,10 @@
     <p class="eyebrow reveal-up">FAQ</p>
     <h2 class="reveal-up">Questions, answered</h2>
     <div class="faq">
-      <details class="reveal-up"><summary>Is Cepheus really free?<span class="pm"></span></summary><div class="ans"><div><p>Yes. The app is free and open source under the MIT license, and it includes free access to NVIDIA-hosted models. If you use paid providers such as Claude or Gemini, you pay them directly with your own key.</p></div></div></details>
-      <details class="reveal-up"><summary>Do I need an API key to start?<span class="pm"></span></summary><div class="ans"><div><p>No. Open a folder and ask the agent. Add your own key later if you want other models or higher limits.</p></div></div></details>
+      <details class="reveal-up"><summary>Is Cepheus really free?<span class="pm"></span></summary><div class="ans"><div><p>Yes. The app, the CLI and Cepheus Web are free and open source under the MIT license, and they include free access to NVIDIA Nemotron models. If you use paid providers such as Claude or Gemini, you pay them directly with your own key.</p></div></div></details>
+      <details class="reveal-up"><summary>Do I need an API key to start?<span class="pm"></span></summary><div class="ans"><div><p>No. Open a folder and ask the agent. The free tier allows 20 requests a minute and 400 a day. Add your own NVIDIA key (free at build.nvidia.com) for higher limits, or any other provider's key for other models.</p></div></div></details>
       <details class="reveal-up"><summary>Where does my code go?<span class="pm"></span></summary><div class="ans"><div><p>Your files stay on your computer. When the agent uses a cloud model, the parts of your code it needs are sent to that provider only. With Ollama or LM Studio nothing leaves your machine. Cepheus itself collects no telemetry.</p></div></div></details>
-      <details class="reveal-up"><summary>Which systems are supported?<span class="pm"></span></summary><div class="ans"><div><p>Windows 10 and 11, 64-bit. You can also open folders on Linux or macOS machines over SSH, or inside Dev Containers.</p></div></div></details>
+      <details class="reveal-up"><summary>Which systems are supported?<span class="pm"></span></summary><div class="ans"><div><p>Windows 10 and 11, macOS 11 or later (Apple silicon and Intel), and 64-bit Linux as an AppImage, .deb or .rpm package. You can also open folders on other machines over SSH or inside Dev Containers, use the CLI anywhere Node.js 18+ runs, or open Cepheus Web in Chrome or Edge.</p></div></div></details>
       <details class="reveal-up"><summary>Can I bring my VS Code themes and settings?<span class="pm"></span></summary><div class="ans"><div><p>Yes. Import settings, color themes and snippets from VS Code, Cursor, Windsurf or VSCodium, or install themes from Open VSX.</p></div></div></details>
       <details class="reveal-up"><summary>Can I run AI models locally?<span class="pm"></span></summary><div class="ans"><div><p>Yes. Point Cepheus at Ollama, LM Studio, llama.cpp, vLLM or any OpenAI-compatible server, on this computer or another machine on your network. The model runs in its own process, so Cepheus itself stays small. The model still needs memory of its own: roughly 5 GB for an 8B model and 40 GB for a 70B model when quantized. For very large models, run them on a strong server and connect Cepheus to it.</p></div></div></details>
       <details class="reveal-up"><summary>Can I build iPhone and Mac apps without a Mac?<span class="pm"></span></summary><div class="ans"><div><p>Yes, through the cloud. Cepheus runs your build on GitHub's macOS machines and downloads the result. Simulator builds and unsigned macOS apps work without an Apple account; installing on a real iPhone or publishing to TestFlight or the App Store needs an Apple Developer Program membership.</p></div></div></details>
@@ -536,8 +537,15 @@
     <p class="eyebrow">Download</p>
     <h2>Start building today<span class="dot">.</span></h2>
     <p class="lede">Free, open source, and ready in a minute.</p>
-    <a class="btn btn-dark lg" id="dl" href="#download" data-href="">Download for Windows <span class="chev" aria-hidden="true">&gt;&gt;</span></a>
-    <div class="meta"><span>Version 0.1.0</span><span>Windows 10 and 11, 64-bit</span><span>MIT License</span></div>
+    <a class="btn btn-dark lg" id="dl" href="https://github.com/Cepheus-IDE/Cepheus/releases/latest">Download Cepheus <span class="chev" aria-hidden="true">&gt;&gt;</span></a>
+    <div class="dl-all" id="dl-all">
+      <a data-os="win" href="https://github.com/Cepheus-IDE/Cepheus/releases/latest"><b>Windows</b><span>Installer (.exe)</span></a>
+      <a data-os="mac" href="https://github.com/Cepheus-IDE/Cepheus/releases/latest"><b>macOS</b><span>Apple silicon and Intel (.dmg)</span></a>
+      <a data-os="appimage" href="https://github.com/Cepheus-IDE/Cepheus/releases/latest"><b>Linux</b><span>AppImage, any distro</span></a>
+      <a data-os="deb" href="https://github.com/Cepheus-IDE/Cepheus/releases/latest"><b>Debian / Ubuntu</b><span>.deb package</span></a>
+      <a data-os="rpm" href="https://github.com/Cepheus-IDE/Cepheus/releases/latest"><b>Fedora / openSUSE</b><span>.rpm package</span></a>
+    </div>
+    <div class="meta"><span id="dl-ver">Latest release</span><span>Windows 10+, macOS 11+, Linux x64</span><span>MIT License</span></div>
   </section>
 </main>
 

@@ -575,3 +575,12 @@ kbd { font: 12px var(--mono); border-radius: 6px; padding: 2px 7px; background: 
 .copy:hover { border-radius: 999px; }
 .section.dark code.i { background: rgba(255,255,255,.08); color: #fff; }
 @media (max-width: 1000px) { .ev3 { grid-template-columns: minmax(0, 1fr); } }
+
+/* ---------- All platform downloads ---------- */
+.dl-all { position: relative; z-index: 1; display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin: 22px auto 0; max-width: 1040px; }
+.dl-all a { display: flex; flex-direction: column; gap: 2px; padding: 12px 18px; border-radius: 16px; background: rgba(255,255,255,.7); backdrop-filter: blur(8px); color: var(--ink); text-decoration: none; text-align: left; transition: border-radius .5s var(--ease), transform .5s var(--ease), background .3s; }
+.dl-all a:hover { border-radius: 28px; transform: translateY(-3px); background: #fff; }
+.dl-all b { font: 500 14.5px var(--display); }
+.dl-all span { font: 12px var(--mono); color: #6b6b67; }
+
+.mnote { margin: -4px 0 12px; font: 12.5px var(--mono); color: #8a8a85; }

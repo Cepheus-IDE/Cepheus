@@ -31,9 +31,34 @@
   if (lenis) lenis.on("scroll", onScroll); else window.addEventListener("scroll", onScroll, { passive: true });
   onScroll();
 
-  // ---------- Download link (fill data-href before launch) ----------
-  var dl = document.getElementById("dl");
-  if (dl && dl.dataset.href) dl.href = dl.dataset.href;
+  // ---------- Download links from the latest GitHub release ----------
+  (function () {
+    var dl = document.getElementById("dl");
+    var all = document.getElementById("dl-all");
+    if (!dl) return;
+    var ua = navigator.userAgent;
+    var os = /Mac/i.test(ua) ? "mac" : /Linux|X11/i.test(ua) && !/Android/i.test(ua) ? "appimage" : /Win/i.test(ua) ? "win" : "";
+    var names = { win: "Windows", mac: "macOS", appimage: "Linux" };
+    var label = dl.firstChild;
+    if (os) label.nodeValue = "Download for " + names[os] + " ";
+    var pick = {
+      win: function (n) { return /setup\.exe$/i.test(n) || /\.exe$/i.test(n); },
+      mac: function (n) { return /\.dmg$/i.test(n); },
+      appimage: function (n) { return /\.AppImage$/i.test(n); },
+      deb: function (n) { return /\.deb$/i.test(n); },
+      rpm: function (n) { return /\.rpm$/i.test(n); }
+    };
+    fetch("https://api.github.com/repos/Cepheus-IDE/Cepheus/releases/latest")
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (rel) {
+        if (!rel || !rel.assets) return;
+        var url = function (k) { var a = rel.assets.filter(function (x) { return pick[k](x.name); })[0]; return a && a.browser_download_url; };
+        if (os && url(os)) dl.href = url(os);
+        if (all) Array.prototype.forEach.call(all.querySelectorAll("a[data-os]"), function (a) { var u = url(a.dataset.os); if (u) a.href = u; });
+        var v = document.getElementById("dl-ver"); if (v && rel.tag_name) v.textContent = "Version " + rel.tag_name.replace(/^v/, "");
+      })
+      .catch(function () {});
+  })();
 
   // ---------- Silk ribbons drawn on canvas ----------
   var silks = Array.prototype.slice.call(document.querySelectorAll("canvas.silk")).map(function (canvas) {

@@ -49,6 +49,11 @@
         <a href="#git">Git and GitHub</a>
         <a href="#browser">Browser preview</a>
         <a href="#toolbox">Toolbox</a>
+        <a href="#database">Database</a>
+        <a href="#docker">Docker</a>
+        <a href="#bridges">Extensions that work</a>
+        <a href="#cli">CLI</a>
+        <a href="#web">Cepheus Web</a>
         <a href="#remote">SSH and containers</a>
         <a href="#settings">Settings and profiles</a>
         <a href="#shortcuts">Keyboard shortcuts</a>
@@ -61,11 +66,11 @@
         <section class="reveal-up" id="start">
           <h2>Get started</h2>
           <ol>
-            <li>Install Cepheus on Windows 10 or 11. WebView2 is already part of Windows 11; on Windows 10 the installer adds it if it is missing.</li>
+            <li>Install Cepheus from the <a href="index.html#download">download page</a>: the <b>.exe</b> installer on Windows 10 or 11, the <b>.dmg</b> on macOS 11 or later, or the <b>AppImage</b>, <b>.deb</b> or <b>.rpm</b> on Linux. Prefer the terminal or the browser? See the <a href="#cli">CLI</a> and <a href="#web">Cepheus Web</a>.</li>
             <li>Open a project with <kbd>Ctrl+O</kbd> or <b>File › Open Folder…</b>.</li>
             <li>Press <kbd>Ctrl+L</kbd> to open the agent panel and describe what you want to build or fix.</li>
           </ol>
-          <p>The agent starts on free NVIDIA models, so you don't need an API key for your first session. Install <a href="https://git-scm.com" target="_blank" rel="noopener">Git</a> to use source control.</p>
+          <p>The agent starts on free NVIDIA Nemotron models, so you don't need an API key. The free tier allows 20 requests a minute and 400 a day. Install <a href="https://git-scm.com" target="_blank" rel="noopener">Git</a> to use source control.</p>
         </section>
 
         <section class="reveal-up" id="models">
@@ -73,7 +78,7 @@
           <p>Choose a model from the picker at the bottom of the agent panel, or open <b>Chat: Manage Language Models…</b> from the Command Palette (<kbd>Ctrl+Shift+P</kbd>).</p>
           <div class="tbl"><table>
             <tr><th>Provider</th><th>What you need</th></tr>
-            <tr><td>NVIDIA (free)</td><td>Nothing. Optionally add your own <code>nvapi-…</code> key from build.nvidia.com for higher limits.</td></tr>
+            <tr><td>NVIDIA (free)</td><td>Nothing. Requests go through the Cepheus free tier (20 a minute, 400 a day). Add your own <code>nvapi-…</code> key from build.nvidia.com for higher limits.</td></tr>
             <tr><td>Anthropic Claude</td><td>An API key from console.anthropic.com</td></tr>
             <tr><td>Google Gemini</td><td>An API key from aistudio.google.com</td></tr>
             <tr><td>OpenAI-compatible</td><td>Base URL and key for OpenAI, OpenRouter, Groq and similar services. Add several under <b>Providers</b>.</td></tr>
@@ -235,6 +240,56 @@ Review the uncommitted changes. Report bugs by severity with file:line.</code></
           <p>Before every commit, staged changes are scanned for API keys, tokens, private keys and .env files; the commit waits until you choose <b>Commit anyway</b> or fix it. <b>Presentation mode</b> (status bar or Tools menu) blurs .env values and secret-looking strings in every editor while you share your screen.</p>
           <h3>More helpers</h3>
           <p>When a terminal command fails, <b>Explain with agent</b> sends the last lines of output to a new agent task. <kbd>Ctrl+Shift+V</kbd> in the editor opens the clipboard history of your last 50 copies (kept in memory only).</p>
+        </section>
+
+
+        <section class="reveal-up" id="database">
+          <h2>Database</h2>
+          <p>Open the <b>Database</b> view in the activity bar and add a connection to <b>PostgreSQL</b>, <b>MySQL</b>, <b>MariaDB</b>, <b>SQLite</b> or <b>SQL Server</b>, directly or through an SSH tunnel. Passwords are stored in your system keychain, never in settings files. Mark a connection as <i>production</i> and every write needs your confirmation.</p>
+          <div class="tbl"><table>
+            <tr><th>Tool</th><th>What it does</th></tr>
+            <tr><td>Explorer</td><td>Databases, schemas, tables, views, functions, columns, indexes and foreign keys.</td></tr>
+            <tr><td>SQL editor</td><td>Autocomplete from your real schema, run all or the selection, EXPLAIN, history, several result sets, cancel a running query.</td></tr>
+            <tr><td>Data grid</td><td>Sort, filter and page through rows. Edits are saved in one transaction after you see the SQL. Export to CSV, JSON or SQL; import CSV.</td></tr>
+            <tr><td>Table designer</td><td>Columns, types, defaults, indexes and foreign keys, with a DDL preview before anything runs.</td></tr>
+            <tr><td>ER diagram</td><td>Every table and relationship on a canvas you can drag, zoom and export as PNG.</td></tr>
+          </table></div>
+          <p><b>Ask the agent.</b> With a connection open, try <i>"Create tables for a blog with users, posts and comments"</i>. The agent reads the schema, writes the DDL with keys and indexes, and runs it only after you approve. <code>DROP</code>, <code>TRUNCATE</code>, and <code>UPDATE</code> or <code>DELETE</code> without <code>WHERE</code> always need a typed confirmation.</p>
+        </section>
+
+        <section class="reveal-up" id="docker">
+          <h2>Docker</h2>
+          <p>The <b>Docker</b> view lists containers, compose projects, images, volumes and networks. Start, stop and restart containers, follow logs, open a shell inside one, watch CPU and memory, pull, build and run images, and clean up unused data. It works with Docker Desktop, Docker Engine or Podman on your machine.</p>
+        </section>
+
+        <section class="reveal-up" id="bridges">
+          <h2>Extensions that work</h2>
+          <p>Cepheus installs themes, icons, snippets and grammars from Open VSX. Extensions that would need VS Code's extension host are connected to real features instead, shown on the extension's page:</p>
+          <ul>
+            <li><b>Claude Code</b> and <b>Codex</b> become the agent in the chat panel when their command-line tools are installed.</li>
+            <li><b>Formatters</b> such as Prettier, Black, Ruff, rustfmt, gofmt, clang-format and shfmt run on save.</li>
+            <li><b>Linters</b> such as ESLint, Ruff, Stylelint, ShellCheck, markdownlint and Hadolint show problems as you type.</li>
+            <li><b>Language servers</b> for YAML, Prisma, GraphQL, Svelte, Astro and Tailwind CSS run as real servers.</li>
+            <li>EditorConfig, inline error messages, path completion and auto-rename of HTML tags are built in.</li>
+          </ul>
+        </section>
+
+        <section class="reveal-up" id="cli">
+          <h2>CLI</h2>
+          <p>The same agent in your terminal. It needs Node.js 18 or later.</p>
+          <pre><code>npm i -g cepheus-ide
+cepheus                           # interactive session in this folder
+cepheus "fix the failing test"    # one task, then exit
+cepheus --plan "add dark mode"    # plan first, read-only
+cepheus models                    # list available models
+cepheus doctor                    # check setup and connectivity</code></pre>
+          <p>It starts on the free tier with no setup. Run <code>cepheus login</code> to add your own key, or set <code>NVIDIA_API_KEY</code>, <code>ANTHROPIC_API_KEY</code>, <code>OPENAI_API_KEY</code> or <code>GEMINI_API_KEY</code>. Plan mode, approvals, AGENTS.md, skills, hooks and MCP servers work as in the app. Use <code>/undo</code> and <code>/diff</code> in a session, and <code>--json</code> for scripts.</p>
+        </section>
+
+        <section class="reveal-up" id="web">
+          <h2>Cepheus Web</h2>
+          <p><b>In the browser.</b> Open <a href="/app/">cepheus.codes/app</a> in Chrome or Edge and pick a local folder. You get the editor, search and the agent on the free models; nothing is uploaded except what the agent sends to the model.</p>
+          <p><b>Full editor anywhere.</b> Run <code>cepheus web</code> in a folder (or <code>cepheus web path/to/project</code>) and open the printed address. Terminals, Git, language servers and the agent then run on that machine. The address includes a one-time token; keep it private.</p>
         </section>
 
         <section class="reveal-up" id="remote">
