@@ -17,7 +17,8 @@ export function ModelPicker({ sessionId }: { sessionId: string }) {
   useModelLists((s) => s.lists); // re-render when a provider's live list arrives
   const unavailable = useUnavailable((s) => s.keys);
   const pick = useSessionPicks((s) => s.picks[sessionId]) ?? defaultPick(settings);
-  const harness = useHarness((s) => s.bySession[sessionId] ?? "cepheus");
+  const fallbackHarness = useStore((s) => s.settings.agentHarness ?? "cepheus");
+  const harness = useHarness((s) => s.bySession[sessionId]) ?? fallbackHarness;
   const harnessModel = useHarness((s) => s.model[sessionId] ?? "default");
   const installed = useHarness((s) => s.installed);
 

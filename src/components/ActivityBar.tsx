@@ -14,6 +14,8 @@ const ITEMS: { id: SidebarView; icon: string; title: string }[] = [
   { id: "agents", icon: "hubot", title: "Agent Tasks" },
   { id: "skills", icon: "lightbulb", title: "Skills" },
   { id: "toolbox", icon: "tools", title: "Toolbox (scripts, ports, .env, TODOs, utilities)" },
+  { id: "docker", icon: "server-environment", title: "Docker (containers, Compose, images, volumes)" },
+  { id: "database", icon: "database", title: "Database (PostgreSQL, MySQL, SQLite, SQL Server)" },
   { id: "extensions", icon: "extensions", title: "Extensions (Ctrl+Shift+X)" },
 ];
 

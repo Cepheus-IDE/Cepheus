@@ -501,3 +501,44 @@ kbd { font: 12px var(--mono); border-radius: 6px; padding: 2px 7px; background: 
 .term > div { opacity: 1; transition: opacity .4s, transform .4s var(--ease); }
 .term.typing > div { opacity: 0; transform: translateY(4px); }
 .term.typing > div.on { opacity: 1; transform: none; }
+
+/* ---------- Toolbox, Skills, Apple sections ---------- */
+.tb-ports, .tb-guard, .tb-sweep, .tb-env { padding: 18px 18px 0; font: 12.5px/1 var(--mono); display: flex; flex-direction: column; gap: 9px; }
+.pr { display: grid; grid-template-columns: 12px 56px 1fr auto; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 10px; background: #fff; box-shadow: 0 6px 14px -12px rgba(0,0,0,.4); }
+.pr b { color: var(--ink); font-weight: 500; }
+.pr span { color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pd { width: 8px; height: 8px; border-radius: 50%; background: #c9c9c5; }
+.pd.on { background: var(--green); animation: pulse 2.4s ease-in-out infinite; }
+@keyframes pulse { 50% { box-shadow: 0 0 0 5px rgba(47,138,74,.15); } }
+.pa { font-size: 11px; padding: 3px 8px; border-radius: 999px; background: var(--bg-2); transition: border-radius .4s var(--ease); }
+.pa.kill { background: #fde7e6; color: #b4413a !important; }
+.tb-toast { position: absolute; left: 18px; right: 18px; bottom: 12px; padding: 9px 12px; border-radius: 12px; background: var(--ink); color: #ddd; font: 12px var(--mono); animation: toastIn 6s var(--ease) infinite; }
+.tb-toast b { color: #fff; font-weight: 500; text-decoration: underline; text-decoration-color: var(--red); text-underline-offset: 3px; }
+@keyframes toastIn { 0%, 30% { opacity: 0; transform: translateY(12px); border-radius: 30px; } 40%, 88% { opacity: 1; transform: none; border-radius: 12px; } 100% { opacity: 0; } }
+.gl { display: grid; grid-template-columns: 26px 1fr; gap: 6px; color: #3a3a38; }
+.gl .ln-n { color: #b0b0ac; text-align: right; }
+.gl i { font-style: normal; color: #2f8a4a; }
+.tb-block { margin-top: 10px; padding: 10px 12px; border-radius: 12px; background: #fde7e6; color: #8f2f28; box-shadow: inset 3px 0 0 var(--red); animation: blockIn 5s var(--ease) infinite; }
+.tb-block b { font-weight: 600; }
+@keyframes blockIn { 0%, 20% { opacity: 0; clip-path: inset(0 100% 0 0 round 12px); } 35%, 90% { opacity: 1; clip-path: inset(0 0 0 0 round 12px); } 100% { opacity: 0; } }
+.sw { display: grid; grid-template-columns: minmax(0, 1fr) 54px; gap: 4px 10px; align-items: center; }
+.sw span { color: #3a3a38; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sw b { grid-row: span 2; text-align: right; color: var(--ink); font-weight: 500; }
+.sw i { height: 5px; border-radius: 3px; background: var(--ink); width: var(--w); animation: shrink 6s var(--ease) infinite; }
+@keyframes shrink { 0%, 40% { width: var(--w); } 60%, 85% { width: 0; } 100% { width: var(--w); } }
+.sw-btn { align-self: flex-start; margin-top: 4px; padding: 6px 12px; border-radius: 999px; background: var(--red); color: #fff; font: 500 12px var(--display); }
+.ev { display: flex; justify-content: space-between; gap: 10px; padding: 9px 12px; border-radius: 10px; background: #fff; }
+.ev b { color: var(--ink); font-weight: 500; overflow: hidden; text-overflow: ellipsis; }
+.ev span { color: var(--ink-3); white-space: nowrap; }
+.ev.miss { box-shadow: inset 3px 0 0 var(--red); }
+.ev.miss span { color: #b4413a; }
+.tb-utils { display: flex; flex-wrap: wrap; align-content: center; justify-content: center; gap: 8px; padding: 18px; }
+.tb-utils span { padding: 6px 12px; border-radius: 999px; background: #fff; font: 12px var(--mono); color: var(--ink); box-shadow: 0 6px 14px -12px rgba(0,0,0,.4); transition: border-radius .4s var(--ease), background .3s, color .3s; }
+.tb-utils span:hover { border-radius: 8px; background: var(--ink); color: #fff; }
+.tb-utils span:nth-child(3n) { animation: float 5s ease-in-out infinite; }
+.skill-cloud { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
+.skill-cloud span { padding: 8px 14px; border-radius: 999px; background: var(--bg-2); font: 500 14px var(--display); color: var(--ink); transition: border-radius .5s var(--ease), background .3s, color .3s; }
+.skill-cloud span:hover { border-radius: 10px; background: var(--ink); color: #fff; }
+.skill-md { min-height: 0; }
+.dark-checks li { color: #cfcfcb; }
+.dark-checks li::before { background: #fff; }

@@ -10,12 +10,16 @@ import { create } from "zustand";
 import { setExternalProblems, clearExternalProblems } from "./problems";
 import { initEditorFeatures } from "./editorFeatures";
 
-interface ServerSpec {
+export interface ServerSpec {
   name: string;
   exe: string;
   command: string;
   /** One-click install command, run in a terminal ("Install Pyright" in the status bar). */
   install?: string;
+  /** Sent as `initializationOptions` (servers bundled in extensions, see bridges/). */
+  initializationOptions?: any;
+  /** Answers to `workspace/configuration` by section (over the built-in defaults). */
+  config?: Record<string, any>;
 }
 
 /** Well-known servers, tried in order when the user hasn't configured one. */
@@ -118,6 +122,7 @@ class Client {
         clientInfo: { name: "Cepheus IDE" },
         rootUri,
         rootPath: this.root,
+        initializationOptions: this.spec.initializationOptions,
         workspaceFolders: [{ uri: rootUri, name: this.root.split("/").pop() }],
         capabilities: {
           workspace: {
@@ -193,7 +198,7 @@ class Client {
     if (m.method && m.id !== undefined) {
       // Server → client requests: answer the common ones so servers don't stall.
       let result: any = null;
-      if (m.method === "workspace/configuration") result = (m.params?.items ?? []).map((it: any) => serverConfig(it?.section));
+      if (m.method === "workspace/configuration") result = (m.params?.items ?? []).map((it: any) => serverConfig(it?.section, this.spec));
       if (m.method === "workspace/workspaceFolders") result = [{ uri: monaco.Uri.file(this.root).toString(), name: "root" }];
       if (m.method === "workspace/applyEdit") {
         applyWorkspaceEdit(m.params.edit).then((ok) => this.send({ id: m.id, result: { applied: ok } }));
@@ -305,7 +310,8 @@ function fixCase(p: string) {
 }
 
 /** Answers `workspace/configuration`. Only a few well-known knobs; null = server default. */
-function serverConfig(section: string | undefined): any {
+function serverConfig(section: string | undefined, spec?: ServerSpec): any {
+  if (section && spec?.config && section in spec.config) return spec.config[section];
   const wsDiag = get().settings.lspWorkspaceDiagnostics !== false;
   const analysis = { diagnosticMode: wsDiag ? "workspace" : "openFilesOnly", autoImportCompletions: true };
   if (section === "python.analysis" || section === "basedpyright.analysis") return analysis;
@@ -325,8 +331,28 @@ function detect(): Promise<Set<string>> {
   return detected;
 }
 
+/** Servers registered at runtime (language servers bundled in extensions, see bridges/). */
+const extraServers = new Map<string, ServerSpec>();
+
+/**
+ * Registers (or with null removes) a runtime server for languages. The user's own command in
+ * Settings → Language Servers still wins; a running client for the language is restarted.
+ */
+export function registerExtraServer(langs: string[], spec: ServerSpec | null) {
+  for (const lang of langs) {
+    const cur = extraServers.get(lang);
+    if (spec ? JSON.stringify(cur) === JSON.stringify(spec) : !cur) continue;
+    if (spec) extraServers.set(lang, spec); else extraServers.delete(lang);
+    const c = clients.get(lang);
+    if (c) { clients.delete(lang); c.stop(); }
+    if (spec) setMissing(lang, null);
+    monaco.editor.getModels().filter((m) => m.getLanguageId() === lang).forEach(attachModel);
+  }
+}
+
 async function specFor(lang: string): Promise<ServerSpec | null> {
   const custom = get().settings.languageServers[lang]?.trim();
+  if (!custom && extraServers.has(lang)) return extraServers.get(lang)!;
   if (custom) {
     const parts = custom.match(/"[^"]+"|\S+/g) ?? [custom];
     const runner = /^(node|npx|python3?|py|uv|uvx|java|dotnet)(\.exe)?$/i.test(parts[0]) && parts[1] ? parts[1] : parts[0];
@@ -617,6 +643,7 @@ export function notifySaved(path: string) {
   // settings.json / snippet files apply live on save.
   import("./settingsLevels").then((m) => m.onFileSaved(path)).catch(() => {});
   import("./snippets").then((m) => m.onFileSaved(path)).catch(() => {});
+  import("./bridges").then((m) => m.onFileSaved(path)).catch(() => {});
 }
 
 /** One-click install of the known server for `lang`, in a terminal; servers restart afterwards. */
@@ -645,6 +672,8 @@ export async function installLanguageServer(lang: string) {
 /** Start once at app boot. */
 export function initLsp() {
   const stopFeatures = initEditorFeatures();
+  // Extension bridges: formatters, linters, bundled language servers, editor extras.
+  const bridges = import("./bridges").then((m) => m.initBridges()).catch((e) => { console.warn("bridges", e); return () => {}; });
   const subs = [
     monaco.editor.onDidCreateModel((m) => attachModel(m)),
     monaco.editor.onWillDisposeModel((m) => clients.get(m.getLanguageId())?.close(m)),
@@ -670,5 +699,5 @@ export function initLsp() {
     clients.clear();
     old.forEach((c) => c.stop());
   });
-  return () => { subs.forEach((s) => s.dispose()); unsub(); stopFeatures(); };
+  return () => { subs.forEach((s) => s.dispose()); unsub(); stopFeatures(); bridges.then((f) => f()); };
 }

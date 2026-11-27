@@ -1,0 +1,21 @@
+[Unit]
+Description=Cepheus free-model proxy (NVIDIA NIM)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=cepheus
+Group=cepheus
+WorkingDirectory=/srv/cepheus/proxy
+EnvironmentFile=/etc/cepheus/proxy.env
+ExecStart=/usr/local/bin/node /srv/cepheus/proxy/server.mjs
+Restart=always
+RestartSec=3
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadOnlyPaths=/srv/cepheus/proxy
+
+[Install]
+WantedBy=multi-user.target

@@ -35,6 +35,11 @@ const TOOL_META: Record<string, { icon: string; verb: string }> = {
   run_command: { icon: "terminal", verb: "Ran" },
   run_check: { icon: "beaker", verb: "Self-check" },
   load_skill: { icon: "lightbulb", verb: "Loaded skill" },
+  // Database client tools (src-tauri/src/db/agent.rs)
+  db_list_connections: { icon: "database", verb: "Listed connections" },
+  db_schema: { icon: "database", verb: "Read schema" },
+  db_query: { icon: "database", verb: "Queried" },
+  db_execute: { icon: "database", verb: "Executed SQL" },
 };
 
 function toolSummary(name: string, args: any): string {
@@ -48,6 +53,7 @@ function toolSummary(name: string, args: any): string {
     case "run_command": return args?.command ?? "";
     case "run_check": return args?.command ?? "";
     case "load_skill": return args?.name ?? "";
+    case "db_schema": case "db_query": case "db_execute": return `${args?.connection ?? ""}${args?.table ? " " + args.table : ""}${args?.sql ? ": " + String(args.sql).replace(/\s+/g, " ").slice(0, 80) : ""}`;
     default: return name.startsWith("mcp__") ? JSON.stringify(args ?? {}).slice(0, 120) : "";
   }
 }
@@ -91,6 +97,7 @@ function ToolItem({ item, sessionId }: { item: Extract<ChatItem, { kind: "tool" 
       {open && (
         <div className="tool-body">
           {item.name === "run_command" && <pre className="cmd">$ {item.args?.command}</pre>}
+          {(item.name === "db_execute" || item.name === "db_query") && item.args?.sql && <pre className="cmd db-approval-sql">{item.args?.reason ? `-- ${item.args.reason}\n` : ""}{String(item.args.sql)}</pre>}
           {item.name === "edit_file" && item.status === "approval" && (
             <div className="mini-diff">
               <pre className="del">{item.args?.old_str}</pre>
@@ -113,7 +120,7 @@ function ToolItem({ item, sessionId }: { item: Extract<ChatItem, { kind: "tool" 
       )}
       {item.status === "approval" && item.approvalId && (
         <div className="approval">
-          <span>{item.name === "run_command" ? "Run this command?" : mcp ? "Call this MCP tool?" : "Apply this change?"}</span>
+          <span>{item.name === "run_command" ? "Run this command?" : item.name === "db_execute" ? `Run this SQL on ${item.args?.connection ?? "the database"}?` : item.name === "db_query" ? "Run this read-only query?" : mcp ? "Call this MCP tool?" : "Apply this change?"}</span>
           <button className="btn small" onClick={() => respondApproval(sessionId, item.approvalId!, false)}>Reject</button>
           <button className="btn small primary" onClick={() => respondApproval(sessionId, item.approvalId!, true)}>
             {item.name === "run_command" ? "Run" : "Accept"}

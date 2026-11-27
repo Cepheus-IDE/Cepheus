@@ -38,10 +38,20 @@ interface HarnessState {
 
 export const useHarness = create<HarnessState>(() => ({ bySession: {}, model: {}, resume: {}, installed: null }));
 
-export const harnessOf = (sessionId: string): Harness => useHarness.getState().bySession[sessionId] ?? "cepheus";
+/** Harness for sessions that haven't picked one (Settings › agentHarness, set by extension bridges). */
+export const defaultHarness = (): Harness => get().settings.agentHarness ?? "cepheus";
+export const harnessOf = (sessionId: string): Harness => useHarness.getState().bySession[sessionId] ?? defaultHarness();
 
 export function setHarness(sessionId: string, h: Harness) {
   useHarness.setState((st) => ({ bySession: { ...st.bySession, [sessionId]: h } }));
+}
+
+/** Makes `h` the default harness (persisted) and switches the active session to it. */
+export async function setDefaultHarness(h: Harness) {
+  const { saveSettings } = await import("./workspace");
+  await saveSettings({ ...get().settings, agentHarness: h });
+  const active = get().activeSessionId;
+  if (active) setHarness(active, h);
 }
 export function setHarnessModel(sessionId: string, m: string) {
   useHarness.setState((st) => ({ model: { ...st.model, [sessionId]: m } }));

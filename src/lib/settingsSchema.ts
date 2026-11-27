@@ -156,9 +156,12 @@ export const SETTINGS: SettingDef[] = [
     ["formatOnPaste", "Format on paste", "Format pasted text with the language formatter.", bool],
     ["multiCursorModifier", "Multi-cursor modifier", "Hold this key and click to add a cursor (the other one opens links / goes to definition).", en(["alt", "Alt"], ["ctrlCmd", "Ctrl / Cmd"])],
     ["dragAndDrop", "Drag and drop text", "Move selected text by dragging it.", bool],
+    ["autoRenameTag", "Auto rename tag", "Editing an HTML / XML / JSX tag name renames its matching tag too.", bool],
+    ["pathCompletion", "Path completion", "Complete relative file paths in strings (imports, src, href, url()).", bool],
   ]),
   ...rows("editor", "On save", [
-    ["formatOnSave", "Format on save", "Run the language formatter before writing the file (files open in the editor).", bool],
+    ["formatOnSave", "Format on save", "Run the language formatter before writing the file (files open in the editor; bridge formatters like Prettier also for background saves).", bool],
+    ["editorConfig", "Apply .editorconfig", "Use indent style/size from .editorconfig files when a file opens, and their line ending, final newline and trailing whitespace rules when saving.", bool],
     ["trimTrailingWhitespace", "Trim trailing whitespace", "Remove spaces and tabs at line ends when saving.", bool],
     ["insertFinalNewline", "Insert final newline", "End the file with a newline when saving.", bool],
     ["trimFinalNewlines", "Trim final newlines", "Remove extra empty lines at the end of the file when saving.", bool],
@@ -170,6 +173,7 @@ export const SETTINGS: SettingDef[] = [
     ["selectionHighlight", "Highlight selection matches", "Highlight other occurrences of the selected text.", bool],
     ["unicodeHighlightAmbiguous", "Highlight ambiguous characters", "Mark characters that look like ASCII ones (e.g. Cyrillic а).", bool],
     ["unicodeHighlightInvisible", "Highlight invisible characters", "Mark zero-width and other invisible characters.", bool],
+    ["inlineErrors", "Inline errors", "Show the first error or warning of each line at the end of the line (like Error Lens).", bool],
   ]),
 
   // ---------------------------------------------------------------- Language features

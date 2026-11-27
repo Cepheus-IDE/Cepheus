@@ -1,0 +1,13 @@
+{
+  "id": "msg_01",
+  "type": "message",
+  "role": "assistant",
+  "model": "claude-opus-5-5",
+  "content": [
+    { "type": "thinking", "thinking": "I should list the directory.", "signature": "sig" },
+    { "type": "text", "text": "Looking at the project." },
+    { "type": "tool_use", "id": "toolu_01", "name": "list_dir", "input": { "path": "." } }
+  ],
+  "stop_reason": "tool_use",
+  "usage": { "input_tokens": 100, "output_tokens": 40, "cache_read_input_tokens": 900, "cache_creation_input_tokens": 10 }
+}

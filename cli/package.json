@@ -1,0 +1,58 @@
+{
+  "name": "cepheus-ide",
+  "version": "0.1.0",
+  "description": "Cepheus: an open-source AI coding agent for your terminal. Works with free NVIDIA developer keys, local models (Ollama, LM Studio) or your own Anthropic, Gemini and OpenAI-compatible keys.",
+  "keywords": [
+    "ai",
+    "agent",
+    "cli",
+    "coding-assistant",
+    "nvidia",
+    "ollama",
+    "llm",
+    "mcp"
+  ],
+  "homepage": "https://github.com/Cepheus-IDE/Cepheus/tree/main/cli#readme",
+  "bugs": {
+    "url": "https://github.com/Cepheus-IDE/Cepheus/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Cepheus-IDE/Cepheus.git",
+    "directory": "cli"
+  },
+  "license": "MIT",
+  "author": "Cepheus contributors",
+  "type": "module",
+  "bin": {
+    "cepheus": "dist/index.js"
+  },
+  "exports": {
+    ".": "./dist/core/agent.js",
+    "./core/*": "./dist/core/*.js",
+    "./node/*": "./dist/node/*.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "build": "node scripts/clean.mjs && tsc -p tsconfig.json",
+    "prepublishOnly": "npm run build && npm run build:web && npm test",
+    "test": "node --test",
+    "build:web": "cd .. && npx vite build --config vite.config.web.ts && cd cli && node scripts/copy-web.mjs"
+  },
+  "dependencies": {
+    "@types/ws": "^8.18.1",
+    "ws": "^8.18.3"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.0",
+    "typescript": "^5.9.3"
+  }
+}

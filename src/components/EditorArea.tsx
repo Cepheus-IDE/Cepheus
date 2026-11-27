@@ -13,6 +13,7 @@ import { attachDebugGutter } from "../lib/debugger";
 import BrowserTab from "./BrowserTab";
 import MergeEditor from "./MergeEditor";
 import PullRequestView from "./PullRequestView";
+import DbTab, { DB_TAB_ICON, isDbTab } from "./db/DbTab";
 import { buildDiffOptions, buildEditorOptions } from "../lib/editorOptions";
 import { pinTab, usePreviewTab } from "../lib/tabPreview";
 
@@ -146,7 +147,7 @@ export default function EditorArea() {
                 onMouseDown={(e) => e.button === 1 && closeTab(t.id)}
                 title={t.path}
               >
-                {t.kind === "browser" ? <i className="codicon codicon-globe" /> : t.kind === "diff" ? <i className="codicon codicon-diff" /> : t.kind === "extension" ? <i className="codicon codicon-extensions" /> : <FileIcon name={t.title} />}
+                {isDbTab(t.kind) ? <i className={`codicon codicon-${DB_TAB_ICON[t.kind]}`} /> : t.kind === "browser" ? <i className="codicon codicon-globe" /> : t.kind === "diff" ? <i className="codicon codicon-diff" /> : t.kind === "extension" ? <i className="codicon codicon-extensions" /> : <FileIcon name={t.title} />}
                 <span className="tab-title">{t.title}</span>
                 <button className="tab-close" onClick={(e) => { e.stopPropagation(); closeTab(t.id); }}>
                   <i className="codicon codicon-close" />
@@ -159,7 +160,8 @@ export default function EditorArea() {
       )}
       {active?.kind === "extension" && active.ext && <ExtensionPage key={active.id} namespace={active.ext.namespace} name={active.ext.name} />}
       {active?.kind === "pr" && active.pr && <PullRequestView key={active.id} {...active.pr} />}
-      {active && active.kind !== "extension" && active.kind !== "browser" && active.kind !== "pr" && (
+      {active && isDbTab(active.kind) && active.db && <DbTab key={active.id} tab={active} />}
+      {active && active.kind !== "extension" && active.kind !== "browser" && active.kind !== "pr" && !isDbTab(active.kind) && (
         <div className="breadcrumbs">
           {relative(ws, active.path).split("/").map((p, i, arr) => (
             <span key={i}>

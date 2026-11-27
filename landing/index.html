@@ -21,6 +21,7 @@
     <a href="#features">Features</a>
     <a href="why.html">Why Cepheus</a>
     <a href="docs.html">Docs</a>
+    <a href="#toolbox">Toolbox</a>
     <a href="#models">Models</a>
     <a href="#faq">FAQ</a>
   </div>
@@ -190,10 +191,124 @@
         <div class="ill themes"><div class="swatch"><i></i><i></i><i></i><i></i></div></div>
         <div class="row-copy">
           <h3>Make it yours</h3>
-          <p>Themes, icon themes and remappable shortcuts. Profiles bundle your setup, and Settings Sync carries it to your other machines. Teach the agent your conventions with AGENTS.md, skills, hooks and MCP servers.</p>
-          <div class="tags"><span>Theme Studio</span><span>Profiles</span><span>Settings Sync</span><span>Skills</span><span>Hooks</span></div>
+          <p>More than 150 settings in one searchable place, from reduce motion and cursor animation to rulers, tab behavior and terminal bells. Themes, icon themes, extension grammars and keymaps from Open VSX. Profiles bundle your setup and Settings Sync carries it to your other machines.</p>
+          <div class="tags"><span>Reduce motion</span><span>Theme Studio</span><span>Keymaps</span><span>Profiles</span><span>Settings Sync</span></div>
         </div>
       </article>
+    </div>
+  </section>
+
+  <!-- ================= TOOLBOX ================= -->
+  <section class="section alt" id="toolbox">
+    <p class="eyebrow reveal-up">Toolbox</p>
+    <h2 class="reveal-up">The small things that save you an hour a week<span class="dot">.</span></h2>
+    <p class="sub reveal-up">A set of everyday tools built into the editor, so you stop reaching for a browser tab or a separate app.</p>
+    <div class="bento">
+      <article class="tile wide reveal">
+        <div class="ill tb-ports" aria-hidden="true">
+          <div class="pr"><span class="pd on"></span><b>:5173</b><span>vite</span><span class="pa">open</span></div>
+          <div class="pr"><span class="pd on"></span><b>:3000</b><span>node server.js</span><span class="pa kill">stop</span></div>
+          <div class="pr"><span class="pd"></span><b>:8080</b><span>java</span><span class="pa">open</span></div>
+          <div class="tb-toast">Port 3000 is in use · <b>Free port 3000</b></div>
+        </div>
+        <h3>Ports, without the hunt</h3>
+        <p>See what is listening on every port, open it in the built-in browser or stop it. When a server fails with "port already in use", Cepheus offers to free it.</p>
+        <div class="tags"><span>Ports</span><span>One-click free</span></div>
+      </article>
+      <article class="tile wide reveal">
+        <div class="ill tb-guard" aria-hidden="true">
+          <div class="gl"><span class="ln-n">12</span><span>STRIPE_KEY = "<i>sk_live_••••••••••••</i>"</span></div>
+          <div class="gl"><span class="ln-n">13</span><span>DEBUG = false</span></div>
+          <div class="tb-block"><b>Commit stopped</b> · config.ts:12 looks like a live API key</div>
+        </div>
+        <h3>Secret guard</h3>
+        <p>Every commit is scanned for API keys, tokens, private keys and staged .env files. You decide whether to fix it or commit anyway.</p>
+        <div class="tags"><span>Before every commit</span><span>Presentation mode</span></div>
+      </article>
+      <article class="tile reveal">
+        <div class="ill tb-sweep" aria-hidden="true">
+          <div class="sw"><span>web-app/node_modules</span><i style="--w:92%"></i><b>1.4 GB</b></div>
+          <div class="sw"><span>api/target</span><i style="--w:70%"></i><b>1.1 GB</b></div>
+          <div class="sw"><span>blog/.next</span><i style="--w:30%"></i><b>420 MB</b></div>
+          <div class="sw-btn">Free 2.9 GB</div>
+        </div>
+        <h3>Disk sweeper</h3>
+        <p>Finds rebuildable folders like node_modules, target and .next across your projects and moves the ones you pick to the trash.</p>
+      </article>
+      <article class="tile reveal">
+        <div class="ill tb-env" aria-hidden="true">
+          <div class="ev"><b>DATABASE_URL</b><span>••••••••</span></div>
+          <div class="ev"><b>REDIS_URL</b><span>••••••••</span></div>
+          <div class="ev miss"><b>STRIPE_WEBHOOK_SECRET</b><span>used in code, missing</span></div>
+        </div>
+        <h3>.env manager</h3>
+        <p>Masked values, keys your code reads but .env lacks, and .env.example kept in step.</p>
+      </article>
+      <article class="tile reveal">
+        <div class="ill tb-utils" aria-hidden="true">
+          <span>JSON ⇄ YAML</span><span>JWT</span><span>Base64</span><span>UUID v7</span><span>Regex</span><span>Cron</span><span>Colors</span><span>Hashes</span><span>Timestamps</span><span>Diff</span>
+        </div>
+        <h3>Dev utilities</h3>
+        <p>Ten converters and decoders that work offline, plus scripts runner, TODO tree, clipboard history and "Explain this error".</p>
+      </article>
+    </div>
+  </section>
+
+  <!-- ================= SKILLS ================= -->
+  <section class="section" id="skills">
+    <div class="os-grid">
+      <div>
+        <p class="eyebrow reveal-up">Skills</p>
+        <h2 class="reveal-up">Teach the agent once. Reuse it forever<span class="dot">.</span></h2>
+        <p class="sub reveal-up">A skill is a short playbook the agent loads when it needs it. Start from 26 ready-made skills, write your own, or turn a conversation that went well into a skill with one click.</p>
+        <ul class="checks">
+          <li class="reveal-up">Install a skill for one project or for every project</li>
+          <li class="reveal-up">Pick a skill right from the chat box</li>
+          <li class="reveal-up">Share skills as a single .cepheus-skill file</li>
+        </ul>
+      </div>
+      <div class="reveal">
+        <div class="skill-cloud" aria-label="Some of the built-in skills">
+          <span>Write unit tests</span><span>Fix failing tests</span><span>Code review</span><span>Security review</span><span>Accessibility audit</span><span>Performance audit</span><span>Add i18n</span><span>Write a README</span><span>Release notes</span><span>Dockerize</span><span>GitHub Actions CI</span><span>SQL migration</span><span>REST endpoint</span><span>Upgrade dependencies</span><span>Explain the codebase</span><span>SEO pass</span>
+        </div>
+        <div class="term skill-md">
+          <div class="dim">.cepheus/skills/release-notes/SKILL.md</div>
+          <div><span class="p">---</span></div>
+          <div>name: release-notes</div>
+          <div>description: Write release notes from git log</div>
+          <div><span class="p">---</span></div>
+          <div class="dim">1. Find the last tag with git describe</div>
+          <div class="dim">2. Group commits into Features, Fixes, Other</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= APPLE ================= -->
+  <section class="section dark" id="apple">
+    <div class="rust-grid">
+      <div>
+        <p class="eyebrow reveal-up">Apple apps without a Mac</p>
+        <h2 class="reveal-up">Build for iPhone and macOS from any PC<span class="dot">.</span></h2>
+        <p class="sub reveal-up muted-dark">Cepheus writes a build workflow for your Xcode, SwiftUI, Flutter, React Native, Expo or Tauri project and runs it on GitHub's macOS machines. Watch the build live, then download the app.</p>
+        <ul class="checks dark-checks">
+          <li class="reveal-up">Simulator builds and unsigned macOS apps need no Apple account</li>
+          <li class="reveal-up">Signed .ipa and TestFlight upload with your own certificates as repository secrets</li>
+          <li class="reveal-up">Preview Expo apps on your iPhone with a QR code</li>
+        </ul>
+        <p class="footnote">Installing on a real iPhone and publishing to TestFlight or the App Store require an Apple Developer Program membership. macOS runner minutes are free for public repositories; private repositories use your GitHub plan's minutes.</p>
+      </div>
+      <div class="flow reveal">
+        <svg viewBox="0 0 400 330" role="img" aria-label="Diagram: your PC sends the project to a cloud macOS runner, which returns the app">
+          <path id="ap1" class="wire" d="M120 70 C 230 70, 260 120, 280 165"/>
+          <path id="ap2" class="wire" d="M280 200 C 260 250, 230 270, 120 270"/>
+          <g><rect class="box" x="10" y="35" width="160" height="70" rx="18"/><text class="lbl" x="90" y="66" text-anchor="middle">Your PC</text><text class="sm" x="90" y="86" text-anchor="middle">Windows or Linux</text></g>
+          <g><rect class="box" x="220" y="145" width="170" height="74" rx="18"/><text class="lbl" x="305" y="177" text-anchor="middle">macOS runner</text><text class="sm" x="305" y="198" text-anchor="middle">Xcode on GitHub Actions</text></g>
+          <g><rect class="box" x="10" y="235" width="160" height="70" rx="18"/><text class="lbl" x="90" y="266" text-anchor="middle">.ipa · .app · .dmg</text><text class="sm" x="90" y="286" text-anchor="middle">downloaded into Cepheus</text></g>
+          <circle r="5" fill="#e5352b"><animateMotion dur="2.8s" repeatCount="indefinite"><mpath href="#ap1"/></animateMotion></circle>
+          <circle r="5" fill="#ffffff"><animateMotion dur="2.8s" begin="1.4s" repeatCount="indefinite"><mpath href="#ap2"/></animateMotion></circle>
+        </svg>
+      </div>
     </div>
   </section>
 
@@ -270,7 +385,8 @@
           <li><span>Anthropic Claude</span><span>API key</span></li>
           <li><span>Google Gemini</span><span>API key</span></li>
           <li><span>OpenAI, OpenRouter, Groq</span><span>API key</span></li>
-          <li><span>Ollama, LM Studio</span><span>local, offline</span></li>
+          <li><span>Ollama, LM Studio, llama.cpp, vLLM</span><span>local, offline</span></li>
+          <li><span>Your own GPU server on the network</span><span>large models</span></li>
           <li><span>Claude Code, Codex</span><span>as the agent</span></li>
         </ul>
       </div>
@@ -286,13 +402,13 @@
     </div>
     <div class="caps">
       <div class="marquee" data-marquee><div class="marquee-track">
-        <span class="cap"><em>◆</em>Plan mode</span><span class="cap"><em>◆</em>Steer mid-run</span><span class="cap"><em>◆</em>Self-check</span><span class="cap"><em>◆</em>Parallel agents</span><span class="cap"><em>◆</em>AGENTS.md</span><span class="cap"><em>◆</em>Skills</span><span class="cap"><em>◆</em>Custom agents</span><span class="cap"><em>◆</em>Hooks</span><span class="cap"><em>◆</em>MCP servers</span><span class="cap"><em>◆</em>Agent debug log</span>
+        <span class="cap"><em>◆</em>Plan mode</span><span class="cap"><em>◆</em>Steer mid-run</span><span class="cap"><em>◆</em>Self-check</span><span class="cap"><em>◆</em>Parallel agents</span><span class="cap"><em>◆</em>AGENTS.md</span><span class="cap"><em>◆</em>Skills</span><span class="cap"><em>◆</em>Custom agents</span><span class="cap"><em>◆</em>Hooks</span><span class="cap"><em>◆</em>MCP servers</span><span class="cap"><em>◆</em>Agent debug log</span><span class="cap"><em>◆</em>Skill gallery</span><span class="cap"><em>◆</em>Secret guard</span><span class="cap"><em>◆</em>Presentation mode</span>
       </div></div>
       <div class="marquee rev" data-marquee><div class="marquee-track">
-        <span class="cap"><em>◆</em>Language servers</span><span class="cap"><em>◆</em>Quick fixes</span><span class="cap"><em>◆</em>Refactors</span><span class="cap"><em>◆</em>Snippets</span><span class="cap"><em>◆</em>Split terminals</span><span class="cap"><em>◆</em>Debugger</span><span class="cap"><em>◆</em>launch.json</span><span class="cap"><em>◆</em>Test Explorer</span><span class="cap"><em>◆</em>Coverage</span><span class="cap"><em>◆</em>Time Machine</span>
+        <span class="cap"><em>◆</em>Language servers</span><span class="cap"><em>◆</em>Quick fixes</span><span class="cap"><em>◆</em>Refactors</span><span class="cap"><em>◆</em>Snippets</span><span class="cap"><em>◆</em>Split terminals</span><span class="cap"><em>◆</em>Debugger</span><span class="cap"><em>◆</em>launch.json</span><span class="cap"><em>◆</em>Test Explorer</span><span class="cap"><em>◆</em>Coverage</span><span class="cap"><em>◆</em>Time Machine</span><span class="cap"><em>◆</em>Port manager</span><span class="cap"><em>◆</em>.env manager</span><span class="cap"><em>◆</em>Disk sweeper</span><span class="cap"><em>◆</em>Dev utilities</span>
       </div></div>
       <div class="marquee" data-marquee><div class="marquee-track">
-        <span class="cap"><em>◆</em>Merge editor</span><span class="cap"><em>◆</em>Commit graph</span><span class="cap"><em>◆</em>Stage hunks</span><span class="cap"><em>◆</em>Pull requests</span><span class="cap"><em>◆</em>Browser preview</span><span class="cap"><em>◆</em>Remote SSH</span><span class="cap"><em>◆</em>Dev Containers</span><span class="cap"><em>◆</em>Profiles</span><span class="cap"><em>◆</em>Settings Sync</span><span class="cap"><em>◆</em>Team policy</span>
+        <span class="cap"><em>◆</em>Merge editor</span><span class="cap"><em>◆</em>Commit graph</span><span class="cap"><em>◆</em>Stage hunks</span><span class="cap"><em>◆</em>Pull requests</span><span class="cap"><em>◆</em>Browser preview</span><span class="cap"><em>◆</em>Remote SSH</span><span class="cap"><em>◆</em>Dev Containers</span><span class="cap"><em>◆</em>Profiles</span><span class="cap"><em>◆</em>Settings Sync</span><span class="cap"><em>◆</em>Team policy</span><span class="cap"><em>◆</em>TextMate grammars</span><span class="cap"><em>◆</em>Keymaps</span><span class="cap"><em>◆</em>Cloud Apple builds</span><span class="cap"><em>◆</em>Reduce motion</span>
       </div></div>
     </div>
   </section>
@@ -347,6 +463,9 @@
       <details class="reveal-up"><summary>Where does my code go?<span class="pm"></span></summary><div class="ans"><div><p>Your files stay on your computer. When the agent uses a cloud model, the parts of your code it needs are sent to that provider only. With Ollama or LM Studio nothing leaves your machine. Cepheus itself collects no telemetry.</p></div></div></details>
       <details class="reveal-up"><summary>Which systems are supported?<span class="pm"></span></summary><div class="ans"><div><p>Windows 10 and 11, 64-bit. You can also open folders on Linux or macOS machines over SSH, or inside Dev Containers.</p></div></div></details>
       <details class="reveal-up"><summary>Can I bring my VS Code themes and settings?<span class="pm"></span></summary><div class="ans"><div><p>Yes. Import settings, color themes and snippets from VS Code, Cursor, Windsurf or VSCodium, or install themes from Open VSX.</p></div></div></details>
+      <details class="reveal-up"><summary>Can I run AI models locally?<span class="pm"></span></summary><div class="ans"><div><p>Yes. Point Cepheus at Ollama, LM Studio, llama.cpp, vLLM or any OpenAI-compatible server, on this computer or another machine on your network. The model runs in its own process, so Cepheus itself stays small. The model still needs memory of its own: roughly 5 GB for an 8B model and 40 GB for a 70B model when quantized. For very large models, run them on a strong server and connect Cepheus to it.</p></div></div></details>
+      <details class="reveal-up"><summary>Can I build iPhone and Mac apps without a Mac?<span class="pm"></span></summary><div class="ans"><div><p>Yes, through the cloud. Cepheus runs your build on GitHub's macOS machines and downloads the result. Simulator builds and unsigned macOS apps work without an Apple account; installing on a real iPhone or publishing to TestFlight or the App Store needs an Apple Developer Program membership.</p></div></div></details>
+      <details class="reveal-up"><summary>Does it work with Docker?<span class="pm"></span></summary><div class="ans"><div><p>Yes. Open a project inside a Dev Container, run docker compose services from the Toolbox, and ask the agent to Dockerize a project with the built-in skill.</p></div></div></details>
       <details class="reveal-up"><summary>What happens if a free model is busy?<span class="pm"></span></summary><div class="ans"><div><p>With Auto selected, Cepheus retries the request on the next available model, and remembers models that are not available for your account.</p></div></div></details>
     </div>
   </section>

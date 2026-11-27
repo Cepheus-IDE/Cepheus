@@ -84,6 +84,10 @@ pub fn definitions() -> Vec<ToolDef> {
         // Integrated browser tool (logic lives in src-tauri/src/browser.rs).
         crate::browser::tool_def(),
     ]
+    .into_iter()
+    // Database client tools (src-tauri/src/db/agent.rs).
+    .chain(crate::db::agent::tool_defs())
+    .collect()
 }
 
 /// Which tools require approval under each mode.
@@ -102,7 +106,7 @@ pub fn needs_approval(name: &str, mode: &str) -> bool {
 
 /// Tools available in Plan mode: research only, nothing that changes the workspace.
 pub fn is_read_only(name: &str) -> bool {
-    matches!(name, "list_dir" | "find_files" | "read_file" | "search" | "update_plan" | "load_skill")
+    matches!(name, "list_dir" | "find_files" | "read_file" | "search" | "update_plan" | "load_skill") || crate::db::agent::is_read_only(name)
 }
 
 pub fn load_skill_def() -> ToolDef {
@@ -358,6 +362,8 @@ pub async fn execute(ws: &str, name: &str, args: &Value) -> Result<(String, Opti
         "update_plan" => Ok(("Plan updated.".into(), None)),
         // Integrated browser tool (src-tauri/src/browser.rs).
         "browser" => crate::browser::agent_tool(ws, args).await.map(|out| (out, None)),
+        // Database client tools (src-tauri/src/db/agent.rs).
+        n if crate::db::agent::TOOL_NAMES.contains(&n) => Box::pin(crate::db::agent::execute(n, args)).await.map(|out| (out, None)),
         other => Err(format!("Unknown tool '{other}'")),
     }
 }

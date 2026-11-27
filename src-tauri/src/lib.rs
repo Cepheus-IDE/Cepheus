@@ -22,6 +22,7 @@ mod sync;
 mod updater;
 mod continuity;
 mod devcontainer;
+mod db;
 
 pub fn run() {
     tauri::Builder::default()
@@ -158,6 +159,31 @@ pub fn run() {
             browser::browser_clear_console,
             browser::browser_snapshot,
             browser::browser_serve,
+            // Database client (src/db)
+            db::db_set_connections,
+            db::db_save_password,
+            db::db_delete_password,
+            db::db_has_password,
+            db::db_connect,
+            db::db_disconnect,
+            db::db_status,
+            db::db_test,
+            db::db_list_databases,
+            db::db_list_schemas,
+            db::db_list_objects,
+            db::db_describe_table,
+            db::db_schema_overview,
+            db::db_query,
+            db::db_cancel,
+            db::db_explain,
+            db::db_table_rows,
+            db::db_apply_edits,
+            db::db_export,
+            db::db_import_csv,
+            db::db_csv_preview,
+            db::db_dump,
+            db::db_restore,
+            db::db_save_bytes,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Cepheus IDE");

@@ -12,6 +12,7 @@ import { compatibility, registryManifest, withProgress } from "./marketplace";
 import { commands } from "./commands";
 import { get, set, toast } from "../store";
 import { saveSettings } from "./workspace";
+import { bridgeFor } from "./bridges/registry";
 
 let snippetDisposables: monaco.IDisposable[] = [];
 let keymapDisposable: monaco.IDisposable | null = null;
@@ -212,6 +213,7 @@ export async function uninstallExtension(id: string, alsoRemove: string[] = []) 
   if ([...gone].some((x) => s.iconTheme.startsWith(`${x}:`))) patch.iconTheme = "";
   await saveExtOptions({ pins }, patch);
   await loadExtensions();
+  await import("./bridges").then((m) => m.onExtensionsUninstalled([...gone])).catch(() => {});
   toast(alsoRemove.length ? `Removed ${gone.size} extensions` : "Extension uninstalled");
 }
 
@@ -417,7 +419,7 @@ async function installPackMembers(packName: string, ids: string[], depth: number
       const meta = await api.openvsxMeta(ns, name);
       if (!meta || meta.error) throw new Error(meta?.error ?? "not found");
       const level = compatibility(await registryManifest(ns, name, meta.version)).level;
-      if (level === "code" || level === "empty" || (level === "pack" && depth > 0)) { skipped.push(id); return; }
+      if (((level === "code" || level === "empty") && !bridgeFor(id)) || (level === "pack" && depth > 0)) { skipped.push(id); return; }
       await installFromOpenVsx(ns, name, undefined, { quiet: true, depth: depth + 1 });
       ok++;
     } catch {
@@ -439,6 +441,8 @@ export async function installFromOpenVsx(namespace: string, name: string, versio
   if (!o.quiet && info.iconThemes.length) patch.iconTheme = `${info.id}:${info.iconThemes[0].id}`;
   await saveSettings({ ...s, ...patch });
   await loadExtensions();
+  // Extension bridges (src/lib/bridges): installing turns the extension's bridge on.
+  const bridgeNote = await import("./bridges").then((m) => m.onExtensionInstalled(info.id)).catch(() => null);
   if (o.quiet) return info;
   const pkg = useManifests.getState()[info.id];
   const compat = compatibility(pkg);
@@ -448,6 +452,7 @@ export async function installFromOpenVsx(namespace: string, name: string, versio
   if (info.snippets.length) parts.push(`${info.snippets.length} snippet set${info.snippets.length > 1 ? "s" : ""} active`);
   if (compat.works.includes("grammar")) parts.push("syntax highlighting active");
   else if (compat.works.includes("language")) parts.push("language rules active");
+  if (bridgeNote) parts.push(bridgeNote);
   if (compat.works.includes("keymap")) {
     try { await applyKeymap(info.id); } catch (e) { toast(errMsg(e), "error"); }
   } else {

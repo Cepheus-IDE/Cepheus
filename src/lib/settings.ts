@@ -205,6 +205,25 @@ export interface Settings {
   doNotDisturb: boolean;
   soundEffects: boolean;
   soundVolume: number;
+  // Extension bridges (src/lib/bridges): VS Code extensions Cepheus stands in for without running their code
+  /** Extension id → bridge on/off (installing an extension with a bridge turns it on). */
+  bridges: Record<string, boolean>;
+  /** Monaco language id → formatter: a bridge formatter ("prettier", "black", "ruff"…) or "editor" (built-in / language server). */
+  defaultFormatter: Record<string, string>;
+  /** Agent harness for sessions that haven't picked one. */
+  agentHarness: "cepheus" | "claude-code" | "codex";
+  /** Error Lens: first diagnostic message at the end of its line. */
+  inlineErrors: boolean;
+  /** Path IntelliSense: relative path completion in strings. */
+  pathCompletion: boolean;
+  /** Auto Rename Tag: linked editing of HTML/XML/JSX tag pairs. */
+  autoRenameTag: boolean;
+  /** Apply .editorconfig files (indent, line endings, final newline, trailing whitespace). */
+  editorConfig: boolean;
+  // Database client (src/lib/db): connection metadata only — passwords live in the OS keychain.
+  dbConnections?: import("./db/types").DbConnection[];
+  /** ER diagram table positions per "connection|database|schema". */
+  dbErLayouts?: Record<string, Record<string, { x: number; y: number }>>;
 }
 
 /** Respect the OS "reduce motion" preference until the user chooses. */
@@ -412,6 +431,13 @@ export const DEFAULT_SETTINGS: Settings = {
   doNotDisturb: false,
   soundEffects: false,
   soundVolume: 0.5,
+  bridges: {},
+  defaultFormatter: {},
+  agentHarness: "cepheus",
+  inlineErrors: false,
+  pathCompletion: true,
+  autoRenameTag: false,
+  editorConfig: true,
 };
 
 /** Normalizes a stored value to the default's shape (wrong type → default). */
@@ -423,7 +449,7 @@ function sameShape(raw: any, key: keyof Settings): any {
   if (def && typeof def === "object") return v && typeof v === "object" && !Array.isArray(v) ? v : def;
   return typeof v === typeof def ? v : def;
 }
-const SHAPED: (keyof Settings)[] = ["rulers", "filesExclude", "watcherExclude", "shellArgs", "terminalEnv"];
+const SHAPED: (keyof Settings)[] = ["rulers", "filesExclude", "watcherExclude", "shellArgs", "terminalEnv", "bridges", "defaultFormatter", "inlineErrors", "pathCompletion", "autoRenameTag", "editorConfig"];
 
 export function mergeSettings(raw: any): Settings {
   if (!raw || typeof raw !== "object") return structuredClone(DEFAULT_SETTINGS);
@@ -449,6 +475,7 @@ export function mergeSettings(raw: any): Settings {
     telemetryLevel: "off",
     updateMode: ["automatic", "startup", "manual", "none"].includes(raw.updateMode) ? raw.updateMode : "startup",
     uiZoom: typeof raw.uiZoom === "number" && raw.uiZoom >= 0.5 && raw.uiZoom <= 2 ? raw.uiZoom : 1,
+    agentHarness: ["cepheus", "claude-code", "codex"].includes(raw.agentHarness) ? raw.agentHarness : "cepheus",
     ...Object.fromEntries(SHAPED.map((k) => [k, sameShape(raw, k)])),
   };
   // Nobody configured a paid provider yet: start on the free NVIDIA models.

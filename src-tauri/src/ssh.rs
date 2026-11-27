@@ -290,6 +290,18 @@ pub async fn ssh_list() -> Vec<ConnInfo> {
         .collect()
 }
 
+/// Opens a `direct-tcpip` channel (local port forwarding) to `host:port` as seen from the SSH
+/// server. Used by the database client's SSH tunnels (src/db/tunnel.rs).
+pub async fn open_direct_tcpip(conn_id: &str, host: &str, port: u16) -> Result<russh::ChannelStream<Msg>, String> {
+    let c = conn(conn_id).await?;
+    let ch = c
+        .handle
+        .channel_open_direct_tcpip(host, port as u32, "127.0.0.1", 0)
+        .await
+        .map_err(|e| format!("SSH tunnel to {host}:{port} failed: {e}"))?;
+    Ok(ch.into_stream())
+}
+
 // ---------------------------------------------------------------------------------------------
 // exec
 // ---------------------------------------------------------------------------------------------

@@ -5,3 +5,6 @@ src-tauri/gen
 *.log
 src-tauri/nvidia.key
 .env
+dist-web
+cli/dist
+docs/HANDOFF.md

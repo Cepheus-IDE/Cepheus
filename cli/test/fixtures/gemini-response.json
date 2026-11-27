@@ -1,0 +1,16 @@
+{
+  "candidates": [
+    {
+      "content": {
+        "role": "model",
+        "parts": [
+          { "text": "Thinking about it", "thought": true },
+          { "text": "I'll search." },
+          { "functionCall": { "name": "search", "args": { "query": "TODO" } }, "thoughtSignature": "abc" }
+        ]
+      },
+      "finishReason": "STOP"
+    }
+  ],
+  "usageMetadata": { "promptTokenCount": 200, "candidatesTokenCount": 20, "thoughtsTokenCount": 5, "cachedContentTokenCount": 0 }
+}

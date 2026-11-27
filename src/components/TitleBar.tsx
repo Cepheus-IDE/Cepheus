@@ -171,6 +171,9 @@ function menus(): { name: string; items: Item[] }[] {
         "sep",
         { label: "Developer Utilities", run: cmd("toolbox.utils") },
         { label: "Free Disk Space…", run: cmd("toolbox.sweep") },
+        "sep",
+        { label: "Docker", run: cmd("docker.show") },
+        { label: "Database", run: cmd("db.show") },
       ],
     },
     {

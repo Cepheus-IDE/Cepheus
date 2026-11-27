@@ -11,6 +11,8 @@ import TestExplorer from "./TestExplorer";
 import SkillsView from "./SkillsView";
 import AppleBuildPanel from "./AppleBuildPanel";
 import Toolbox from "./Toolbox";
+import DockerView from "./DockerView";
+import DatabaseView from "./db/DatabaseView";
 
 export default function Sidebar() {
   const view = useStore((s) => s.sidebar);
@@ -35,6 +37,10 @@ export default function Sidebar() {
       return <RemotePanel />;
     case "skills":
       return <SkillsView />;
+    case "database":
+      return <DatabaseView />;
+    case "docker":
+      return <DockerView />;
     case "toolbox":
       return <Toolbox />;
     case "agents":

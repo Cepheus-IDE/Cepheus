@@ -30,10 +30,14 @@ export function cleanupEdits(lines: string[], s: Opts): { line: number; from: nu
 const withTimeout = <T,>(p: Promise<T>, ms: number) => Promise.race([p, new Promise<void>((r) => setTimeout(r, ms))]);
 
 export async function beforeSave(model: monaco.editor.ITextModel) {
-  const s = get().settings;
+  const bridges = await import("./bridges").catch(() => null);
+  // .editorconfig (bridges/extras.ts) overrides the whitespace rules per file and sets line endings.
+  const s = { ...get().settings, ...((await bridges?.saveOverrides(model).catch(() => null)) ?? {}) };
   const ed = editorRef.current;
+  // A bridge formatter (Prettier, Black, …) is the language's formatter: it runs without an editor.
+  const bridged = s.formatOnSave && !!bridges && (await bridges.formatOnSave(model).catch(() => false));
   // Formatting needs an editor showing the model; background saves (auto save of other tabs) skip it.
-  if (s.formatOnSave && ed && ed.getModel() === model) {
+  if (s.formatOnSave && !bridged && ed && ed.getModel() === model) {
     const action = ed.getAction("editor.action.formatDocument");
     if (action?.isSupported()) await withTimeout(action.run(), 2500).catch(() => {});
   }

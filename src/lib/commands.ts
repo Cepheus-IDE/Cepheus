@@ -156,6 +156,14 @@ export const commands: Command[] = [
   { id: "toolbox.clipboard", label: "Edit: Paste from Clipboard History… (Ctrl+Shift+V in editor)", run: async () => (await import("./toolbox/clipboard")).openClipPicker() },
   { id: "toolbox.explainError", label: "Terminal: Explain Last Error with Agent", run: async () => (await import("./toolbox")).explainLastFailure() },
   { id: "toolbox.scanSecrets", label: "Git: Scan Staged Changes for Secrets", run: async () => (await import("./toolbox")).scanStagedForSecrets() },
+  // Docker / Podman (src/lib/docker.ts, src/components/DockerView.tsx)
+  { id: "docker.show", label: "Docker: Show Containers", run: async () => (await import("./docker")).showDocker("containers") },
+  { id: "docker.composeUp", label: "Docker: Compose Up", run: async () => (await import("./docker")).commandComposeUp() },
+  { id: "docker.composeDown", label: "Docker: Compose Down", run: async () => (await import("./docker")).commandComposeDown() },
+  { id: "docker.prune", label: "Docker: Prune…", run: async () => (await import("./docker")).showDocker("cleanup") },
+  // Database client (src/lib/db, src/components/db)
+  { id: "db.show", label: "Database: Show Connections", run: () => set({ sidebar: "database", view: "editor" }) },
+  { id: "db.newQuery", label: "Database: New Query", run: async () => { const m = await import("./db/store"); const s = m.useDb.getState().selection; const id = s.conn ?? m.connections()[0]?.id; if (id) m.openDbTab("dbquery", { conn: id, database: s.database, schema: s.schema }); else set({ sidebar: "database", view: "editor" }); } },
 ];
 
 /** Effective shortcut for a command: the user's override, else the default. */

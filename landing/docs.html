@@ -48,6 +48,7 @@
         <a href="#testing">Testing</a>
         <a href="#git">Git and GitHub</a>
         <a href="#browser">Browser preview</a>
+        <a href="#toolbox">Toolbox</a>
         <a href="#remote">SSH and containers</a>
         <a href="#settings">Settings and profiles</a>
         <a href="#shortcuts">Keyboard shortcuts</a>
@@ -76,7 +77,7 @@
             <tr><td>Anthropic Claude</td><td>An API key from console.anthropic.com</td></tr>
             <tr><td>Google Gemini</td><td>An API key from aistudio.google.com</td></tr>
             <tr><td>OpenAI-compatible</td><td>Base URL and key for OpenAI, OpenRouter, Groq and similar services. Add several under <b>Providers</b>.</td></tr>
-            <tr><td>Ollama, LM Studio</td><td>A local server, e.g. <code>http://localhost:11434/v1</code>. No key, and no internet needed.</td></tr>
+            <tr><td>Ollama, LM Studio, llama.cpp, vLLM</td><td>A local server, e.g. <code>http://localhost:11434/v1</code>, or one on another machine such as <code>http://192.168.1.20:11434/v1</code>. No key and no internet needed. The model uses its own memory (roughly 5 GB for an 8B model, 40 GB for 70B when quantized); Cepheus itself stays small.</td></tr>
           </table></div>
           <p><b>Auto</b> picks a model for each request and falls back to the next one if a model returns a rate limit, a server error, a timeout or "not found". Models that are not available for your account are skipped from then on.</p>
           <p>You can also run <b>Claude Code</b> or <b>Codex</b> as the agent if their command-line tools are installed. Pick them in the harness menu next to the model picker.</p>
@@ -218,6 +219,24 @@ Review the uncommitted changes. Report bugs by severity with file:line.</code></
           <p>The tab has device sizes, DevTools and a console. <b>Share with Agent</b> sends the page's text, structure and console errors to the agent, and the agent can open, read and click through the page itself.</p>
         </section>
 
+        <section class="reveal-up" id="toolbox">
+          <h2>Toolbox</h2>
+          <p>Open the <b>Toolbox</b> view or the <b>Tools</b> menu for everyday helpers:</p>
+          <div class="tbl"><table>
+            <tr><th>Tool</th><th>What it does</th></tr>
+            <tr><td>Scripts</td><td>Runs package.json scripts (with npm, pnpm, yarn or bun), Makefile targets, justfile recipes, Cargo, Composer, Python and docker compose services in a terminal. Pin favorites; see the last exit code.</td></tr>
+            <tr><td>Ports</td><td>Lists listening ports with their process. Open in the browser tab or stop the process. When output says a port is already in use, a notice offers to free it.</td></tr>
+            <tr><td>.env</td><td>Shows keys with masked values, keys used in code but missing from .env, and differences with .env.example.</td></tr>
+            <tr><td>TODO</td><td>Every TODO, FIXME, HACK, XXX and NOTE comment, grouped by file.</td></tr>
+            <tr><td>Disk</td><td>Finds rebuildable folders such as node_modules, target, .next, .venv and DerivedData, and moves the ones you select to the trash.</td></tr>
+            <tr><td>Utils</td><td>JSON ⇄ YAML ⇄ TOML, JWT decoder, Base64 and URL encoding, UUID v4/v7, timestamps, regex tester, colors, hashes, text diff and a cron explainer.</td></tr>
+          </table></div>
+          <h3>Secret guard and presentation mode</h3>
+          <p>Before every commit, staged changes are scanned for API keys, tokens, private keys and .env files; the commit waits until you choose <b>Commit anyway</b> or fix it. <b>Presentation mode</b> (status bar or Tools menu) blurs .env values and secret-looking strings in every editor while you share your screen.</p>
+          <h3>More helpers</h3>
+          <p>When a terminal command fails, <b>Explain with agent</b> sends the last lines of output to a new agent task. <kbd>Ctrl+Shift+V</kbd> in the editor opens the clipboard history of your last 50 copies (kept in memory only).</p>
+        </section>
+
         <section class="reveal-up" id="remote">
           <h2>SSH and containers</h2>
           <p>Add a host in the <b>Remote · SSH</b> view (or import it from <code>~/.ssh/config</code>) and open a folder on it. Files, terminals, git, search and the agent run on the server.</p>
@@ -226,7 +245,7 @@ Review the uncommitted changes. Report bugs by severity with file:line.</code></
 
         <section class="reveal-up" id="settings">
           <h2>Settings and profiles</h2>
-          <p>Open settings with <kbd>Ctrl+,</kbd>, or edit them as JSON with <b>Preferences: Open User Settings (JSON)</b>. A project can override editor and appearance settings in <code>.cepheus/settings.json</code>:</p>
+          <p>Open settings with <kbd>Ctrl+,</kbd>. More than 150 settings are grouped into categories such as Motion &amp; Accessibility (reduce motion, cursor style, blinking and caret animation, smooth scrolling), Editor Text, Files &amp; Explorer, Workbench &amp; Layout, Terminal, Agent &amp; AI, Git, and Notifications &amp; Sounds. Search finds any setting by name, description or key, and <b>Modified</b> shows only what you changed. You can also edit them as JSON with <b>Preferences: Open User Settings (JSON)</b>. A project can override editor and appearance settings in <code>.cepheus/settings.json</code>:</p>
 <pre><code>{ "tabSize": 4, "wordWrap": true, "theme": "builtin:paper" }</code></pre>
           <div class="note">A project's settings file can only change how the editor looks and behaves. It can't change commands, language servers, AI providers or approval mode, so a cloned repository can't run anything on your machine through it.</div>
           <p><b>Profiles</b> bundle settings, shortcuts, extensions, snippets and layout, and can be exported to a <code>.cepheus-profile</code> file. <b>Settings Sync</b> keeps them in a private GitHub Gist; API keys and tokens are never synced.</p>

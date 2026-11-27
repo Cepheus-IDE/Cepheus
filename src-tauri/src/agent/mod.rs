@@ -377,6 +377,10 @@ async fn run_loop(
     if let Some(a) = &agent_def {
         system.push_str(&format!("\n\n# Agent: {}\n{}", a.name, a.body.trim()));
     }
+    // Database client: connections + schema-design guidance (src-tauri/src/db/agent.rs).
+    if let Some(dbp) = crate::db::agent::system_prompt() {
+        system.push_str(&dbp);
+    }
     if plan_mode {
         system.push_str(PLAN_MODE_PROMPT);
     }
@@ -612,7 +616,11 @@ async fn run_tool(
     }
 
     // `|| browser::...`: browser click/type/eval need approval per action (src-tauri/src/browser.rs).
-    if tools::needs_approval(&call.name, approval_mode) || crate::browser::needs_approval(&call.name, &call.args, approval_mode) {
+    // `|| db::...`: db_execute always asks (production: even in Turbo); db_query asks in Ask mode.
+    if tools::needs_approval(&call.name, approval_mode)
+        || crate::browser::needs_approval(&call.name, &call.args, approval_mode)
+        || crate::db::agent::needs_approval(&call.name, &call.args, approval_mode)
+    {
         let approval_id = uuid::Uuid::new_v4().to_string();
         let (tx, rx) = oneshot::channel();
         approvals.lock().unwrap().insert(approval_id.clone(), tx);

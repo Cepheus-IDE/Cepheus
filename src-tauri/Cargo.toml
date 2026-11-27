@@ -36,6 +36,15 @@ sha2 = "0.10"
 tauri-plugin-updater = "2"
 tauri-plugin-deep-link = "2"
 tauri-plugin-single-instance = { version = "2", features = ["deep-link"] }
+# Database client (src/db): pure-Rust drivers, rustls only (no OpenSSL / native client libs); SQLite is bundled.
+sqlx = { version = "0.8", default-features = false, features = ["runtime-tokio", "tls-rustls-ring-webpki", "postgres", "mysql", "sqlite", "chrono", "rust_decimal", "uuid", "json"] }
+tiberius = { version = "0.13", default-features = false, features = ["tds80", "rustls", "chrono", "rust_decimal"] }
+tokio-util = { version = "0.7", features = ["compat"] }
+futures-util = "0.3"
+chrono = { version = "0.4", default-features = false, features = ["std", "clock"] }
+rust_decimal = "1"
+libsqlite3-sys = "0.30" # same version sqlx-sqlite links (bundled); used for sqlite3_interrupt
+keyring = { version = "3", features = ["apple-native", "windows-native", "async-secret-service", "tokio", "crypto-rust"] }
 
 [profile.release]
 opt-level = "s"

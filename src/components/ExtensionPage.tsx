@@ -14,6 +14,8 @@ import { saveSettings, openExtension } from "../lib/workspace";
 import { parseJsonc } from "../lib/settings";
 import { get, toast, useStore } from "../store";
 import { CompatBadge } from "./ExtensionsPanel";
+import BridgeCard, { NoBridgeNote } from "./BridgeCard";
+import { bridgeFor } from "../lib/bridges/registry";
 
 const CONTRIB_LABEL: Record<string, string> = {
   commands: "Commands", configuration: "Settings", debuggers: "Debuggers", menus: "Menus", views: "Views", viewsContainers: "View containers",
@@ -125,7 +127,8 @@ export default function ExtensionPage({ namespace, name }: { namespace: string; 
   const description = meta?.description || installed?.description || "";
   const version = installed?.version || meta?.version;
   const repo = meta?.repository || installed?.repository;
-  const status = !installed ? null : disabled ? "Disabled" : features.supported.length ? "Active" : "Installed — nothing to run";
+  const bridge = bridgeFor(id);
+  const status = !installed ? null : disabled ? "Disabled" : features.supported.length ? "Active" : bridge ? "Installed — works through a Cepheus bridge" : "Installed — nothing to run";
   const tabs: Tab[] = ["details", "features", ...(packIds.length ? (["pack"] as Tab[]) : []), "changelog"];
 
   return (
@@ -156,12 +159,13 @@ export default function ExtensionPage({ namespace, name }: { namespace: string; 
             {status && <span className={`ext-status ${disabled ? "off" : ""}`}>● {status}</span>}
           </div>
           <p>{description}</p>
-          {compat && (
+          {compat && (bridge || compat.level !== "code") && (
             <div className={`ext-compat-banner ${compat.level}`}>
-              <CompatBadge level={compat.level} />
-              <span>{compat.label}</span>
+              <CompatBadge level={compat.level} extId={id} />
+              <span>{bridge ? (compat.works.length ? `${compat.works.join(" / ")} from the extension · ${bridge.title} through a Cepheus bridge` : `${bridge.title} through a Cepheus bridge (see below)`) : compat.label}</span>
             </div>
           )}
+          {compat?.level === "code" && !bridge && <NoBridgeNote extId={id} displayName={title} />}
           <div className="ext-actions">
             {!installed ? (
               <button className="btn primary" disabled={!!busy || offline || !extensionAllowed(id, meta?.version)} title={extensionAllowed(id, meta?.version) ? undefined : "Not on your organization's extension allowlist"} onClick={() => act("install", () => installFromOpenVsx(namespace, name, pickVersion || undefined))}>
@@ -233,6 +237,8 @@ export default function ExtensionPage({ namespace, name }: { namespace: string; 
           )}
         </div>
       </header>
+
+      {bridge && <BridgeCard extId={id} installed={!!installed} />}
 
       <nav className="ext-page-tabs">
         {tabs.map((t) => (

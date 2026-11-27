@@ -1,0 +1,36 @@
+# Caddy gets and renews HTTPS certificates automatically.
+cepheus.codes {
+	encode zstd gzip
+	root * /srv/cepheus/site
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options nosniff
+		Referrer-Policy strict-origin-when-cross-origin
+		-Server
+	}
+	# The browser app is a single-page app under /app/.
+	handle /app/* {
+		try_files {path} /app/index.html
+		file_server
+	}
+	handle {
+		try_files {path} {path}.html {path}/index.html
+		file_server
+	}
+}
+
+www.cepheus.codes {
+	redir https://cepheus.codes{uri} permanent
+}
+
+api.cepheus.codes {
+	encode zstd gzip
+	header -Server
+	reverse_proxy 127.0.0.1:8787 {
+		flush_interval -1
+		transport http {
+			read_timeout 300s
+			write_timeout 300s
+		}
+	}
+}

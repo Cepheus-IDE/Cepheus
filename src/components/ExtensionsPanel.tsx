@@ -11,6 +11,8 @@ import {
 import { extensionAllowed, policy } from "../lib/policy";
 import { openExtension } from "../lib/workspace";
 import { toast, useStore } from "../store";
+import { bridgeFor } from "../lib/bridges/registry";
+import { BridgeBadge } from "./BridgeCard";
 
 function LocalIcon({ ext }: { ext: ExtInfo }) {
   const [url, setUrl] = useState<string | null>(null);
@@ -22,12 +24,17 @@ function LocalIcon({ ext }: { ext: ExtInfo }) {
 
 const settingsRegistry = () => useStore.getState().settings.extensionRegistryUrl;
 
-const SHORT: Record<CompatLevel, string> = { full: "Works", partial: "Partly works", pack: "Pack", code: "Needs code", empty: "Nothing to run" };
+const SHORT: Record<CompatLevel, string> = { full: "Works", partial: "Partly works", pack: "Pack", code: "Needs extension code", empty: "Nothing to run" };
+const CODE_WHY = "Its features are JavaScript for VS Code's extension host, which Cepheus doesn't have. Open it to suggest a bridge.";
 
-/** Small "works in Cepheus" badge; `level` undefined while the manifest is loading. */
-export function CompatBadge({ level, title }: { level?: CompatLevel; title?: string }) {
+/**
+ * Small "works in Cepheus" badge; `level` undefined while the manifest is loading. Extensions with a
+ * Cepheus bridge (src/lib/bridges) show the bridge's status instead.
+ */
+export function CompatBadge({ level, title, extId }: { level?: CompatLevel; title?: string; extId?: string }) {
+  if (extId && bridgeFor(extId)) return <BridgeBadge extId={extId} />;
   if (!level) return null;
-  return <span className={`ext-compat ${level}`} title={title}>{SHORT[level]}</span>;
+  return <span className={`ext-compat ${level}`} title={level === "code" ? CODE_WHY : title}>{SHORT[level]}</span>;
 }
 
 function Stars({ rating, count }: { rating?: number; count?: number }) {
@@ -130,7 +137,7 @@ export default function ExtensionsPanel() {
   const shown = useMemo(() => hits.filter((h) => {
     if (verifiedOnly && !h.verified) return false;
     const c = compat[hitId(h)];
-    if (supportedOnly && c && (c.level === "code" || c.level === "empty")) return false;
+    if (supportedOnly && c && (c.level === "code" || c.level === "empty") && !bridgeFor(hitId(h))) return false;
     return true;
   }), [hits, compat, verifiedOnly, supportedOnly]);
 
@@ -151,7 +158,7 @@ export default function ExtensionsPanel() {
             <span>{h.namespace}</span>
             {h.downloadCount ? <span title={`${h.downloadCount.toLocaleString()} installs`}><i className="codicon codicon-cloud-download" /> {fmtCount(h.downloadCount)}</span> : null}
             <Stars rating={h.averageRating} count={h.reviewCount} />
-            <CompatBadge level={c?.level} title={c?.label} />
+            <CompatBadge level={c?.level} title={c?.label} extId={hitId(h)} />
           </div>
         </div>
         {inst ? (
@@ -200,7 +207,7 @@ export default function ExtensionsPanel() {
             />
             <div className="ext-cats wrap">
               {CATEGORIES.map((c) => (
-                <button key={c.id} className={cat.id === c.id ? "on" : ""} title={c.unsupported ? "Not supported: runs code" : undefined} onClick={() => { setCat(c); search(q, c); }}>
+                <button key={c.id} className={cat.id === c.id ? "on" : ""} title={c.unsupported ? "These run extension code; popular ones work through Cepheus bridges" : undefined} onClick={() => { setCat(c); search(q, c); }}>
                   {c.label}{c.unsupported && <span className="ext-cat-x">*</span>}
                 </button>
               ))}
@@ -218,7 +225,7 @@ export default function ExtensionsPanel() {
           <div className="tree">
             {cat.unsupported && (
               <div className="ext-unsupported-note">
-                <b>Not supported: runs code.</b> {cat.label} extensions work by running their own JavaScript, which Cepheus never executes. Use language servers (Settings → Languages) or tasks instead.
+                <b>Extension code doesn't run in Cepheus.</b> {cat.label} extensions work by running their own JavaScript, which Cepheus never executes. Popular ones have a <b>Cepheus bridge</b> instead (badges “Works in Cepheus”, “Works after setup”, “Built into Cepheus”): it runs the same tool from your project or PATH.
               </div>
             )}
             {featured ? (
@@ -258,7 +265,7 @@ export default function ExtensionsPanel() {
               </>
             )}
             <div className="ext-note">
-              Cepheus runs the declarative parts of extensions: <b>color themes</b>, <b>file icon themes</b>, <b>snippets</b>, <b>language grammars</b>, <b>editing rules</b>, <b>keymaps</b> and <b>extension packs</b>. Extension code (language servers, commands, formatters) is never executed; each extension's page shows what works.
+              Cepheus runs the declarative parts of extensions: <b>color themes</b>, <b>file icon themes</b>, <b>snippets</b>, <b>language grammars</b>, <b>editing rules</b>, <b>keymaps</b> and <b>extension packs</b>. Extension code is never executed; popular formatters, linters, language servers and agents (Prettier, ESLint, Ruff, YAML, Svelte, Claude Code…) work through <b>bridges</b> that run the real tool instead. Each extension's page shows what works.
             </div>
           </div>
         </>
@@ -309,7 +316,7 @@ export default function ExtensionsPanel() {
                     <span>{e.publisher} · v{e.version}{pinned ? " (pinned)" : ""}</span>
                     {upd && <span className="ext-upd">→ v{upd.latest}</span>}
                     {e.source !== "openvsx" && <span>from {e.source}</span>}
-                    <CompatBadge level={c?.level} title={c?.label} />
+                    <CompatBadge level={c?.level} title={c?.label} extId={e.id} />
                   </div>
                 </div>
                 <button className="btn small" title={off ? "Enable" : "Disable"} onClick={(ev) => { ev.stopPropagation(); run("toggle", () => setExtensionEnabled(e.id, off)); }}>

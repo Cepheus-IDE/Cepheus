@@ -4,7 +4,7 @@ import type { ExtInfo, GitStatus } from "./lib/api";
 
 export interface Tab {
   id: string;
-  kind: "file" | "diff" | "extension" | "merge" | "pr" | "browser"; // browser: integrated browser tab, path = current URL
+  kind: "file" | "diff" | "extension" | "merge" | "pr" | "browser" | "dbquery" | "dbtable" | "dbdesign" | "dber"; // browser: integrated browser tab, path = current URL; db*: database client (src/components/db)
   path: string;
   /** For extension tabs */
   ext?: { namespace: string; name: string };
@@ -13,6 +13,8 @@ export interface Tab {
   title: string;
   original?: string;
   modified?: string;
+  /** For database tabs (dbquery / dbtable / dbdesign / dber) */
+  db?: import("./lib/db/types").DbTabRef;
   /** For diff tabs: label shown on the left side */
   originalLabel?: string;
 }
@@ -20,7 +22,7 @@ export interface Tab {
 export interface Problem { path: string; line: number; col: number; endLine: number; endCol: number; severity: "error" | "warning" | "info"; message: string; source: string }
 export type PanelTab = "terminal" | "problems" | "debug" | "tests";
 
-export type SidebarView = "explorer" | "search" | "git" | "debug" | "testing" | "github" | "remote" | "extensions" | "agents" | "skills" | "apple" | "toolbox";
+export type SidebarView = "explorer" | "search" | "git" | "debug" | "testing" | "github" | "remote" | "extensions" | "agents" | "skills" | "apple" | "toolbox" | "docker" | "database";
 
 export type ChatItem =
   | { kind: "user"; text: string; /** steering message waiting for the next model turn */ queued?: boolean }
