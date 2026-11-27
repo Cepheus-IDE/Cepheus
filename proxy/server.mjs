@@ -4,7 +4,9 @@
 // Env: NVIDIA_API_KEY (required), PORT (default 8787), HOST (default 127.0.0.1),
 //      ALLOWED_ORIGINS (comma list for browsers, default https://cepheus.codes,https://www.cepheus.codes),
 //      RPM (requests per minute per client, default 20), RPD (requests per day per client, default 400),
-//      MAX_TOKENS (cap per request, default 8192), MODELS (comma allowlist, default Nemotron models).
+//      MAX_TOKENS (cap per request, default 8192), MODELS (comma allowlist, default Nemotron models),
+//      IMG_RPM / IMG_RPD (image generations per client per minute / day, default 6 / 60),
+//      IMAGE_MODEL (default black-forest-labs/flux.2-klein-4b).
 import http from "node:http";
 
 const UPSTREAM = process.env.UPSTREAM || "https://integrate.api.nvidia.com/v1";
@@ -15,6 +17,12 @@ const RPM = Number(process.env.RPM || 20);
 const RPD = Number(process.env.RPD || 400);
 const MAX_TOKENS = Number(process.env.MAX_TOKENS || 8192);
 const MAX_BODY = 4 * 1024 * 1024;
+const IMG_RPM = Number(process.env.IMG_RPM || 6);
+const IMG_RPD = Number(process.env.IMG_RPD || 60);
+const IMAGE_MODEL = process.env.IMAGE_MODEL || "black-forest-labs/flux.2-klein-4b";
+const GENAI = process.env.GENAI_UPSTREAM || "https://ai.api.nvidia.com/v1/genai";
+// FLUX.2 klein accepts multiples of 16 between 512 and 1568.
+const SIZES = { "1344x768": [1344, 768], "1024x1024": [1024, 1024], "768x1344": [768, 1344] };
 const ORIGINS = new Set((process.env.ALLOWED_ORIGINS || "https://cepheus.codes,https://www.cepheus.codes").split(",").map((s) => s.trim()).filter(Boolean));
 const MODELS = new Set((process.env.MODELS || [
   "nvidia/nemotron-3-ultra-550b-a55b",
@@ -30,6 +38,8 @@ if (!KEY) {
 // ---------- per-client rate limits (in memory; counts only, never content) ----------
 const minute = new Map(); // client -> { start, n }
 const day = new Map();
+const imgMinute = new Map();
+const imgDay = new Map();
 function take(map, client, windowMs, limit) {
   const now = Date.now();
   let e = map.get(client);
@@ -42,6 +52,8 @@ setInterval(() => {
   const now = Date.now();
   for (const [k, e] of minute) if (now - e.start > 60_000) minute.delete(k);
   for (const [k, e] of day) if (now - e.start > 86_400_000) day.delete(k);
+  for (const [k, e] of imgMinute) if (now - e.start > 60_000) imgMinute.delete(k);
+  for (const [k, e] of imgDay) if (now - e.start > 86_400_000) imgDay.delete(k);
 }, 60_000).unref();
 
 function clientId(req) {
@@ -83,6 +95,38 @@ function readBody(req) {
   });
 }
 
+// OpenAI-style image endpoint backed by FLUX.2 klein. Body: { prompt, size }.
+async function images(req, res) {
+  const client = clientId(req);
+  const m = take(imgMinute, client, 60_000, IMG_RPM);
+  if (!m.ok) return fail(res, 429, `Image limit: ${IMG_RPM} per minute. Try again in ${m.resetIn}s.`, { "Retry-After": String(m.resetIn) });
+  const d = take(imgDay, client, 86_400_000, IMG_RPD);
+  if (!d.ok) return fail(res, 429, `Daily image limit of ${IMG_RPD} reached. It resets within ${Math.ceil(d.resetIn / 3600)}h.`, { "Retry-After": String(d.resetIn) });
+  let body;
+  try { body = JSON.parse(await readBody(req)); } catch { return fail(res, 400, "Invalid JSON"); }
+  const prompt = typeof body.prompt === "string" ? body.prompt.trim().slice(0, 2000) : "";
+  if (!prompt) return fail(res, 400, "prompt is required");
+  const [width, height] = SIZES[body.size] || SIZES["1024x1024"];
+  const ac = new AbortController();
+  const timer = setTimeout(() => ac.abort(), 90_000);
+  req.on("close", () => { if (!res.writableEnded) ac.abort(); });
+  try {
+    const up = await fetch(`${GENAI}/${IMAGE_MODEL}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json", Authorization: `Bearer ${KEY}` },
+      body: JSON.stringify({ prompt, width, height, steps: 4 }),
+      signal: ac.signal,
+    });
+    const j = await up.json().catch(() => null);
+    const a = j && Array.isArray(j.artifacts) ? j.artifacts[0] : null;
+    if (!up.ok || !a) return fail(res, up.status === 429 ? 429 : 502, up.status === 429 ? "The image service is busy, try again shortly" : "Image generation failed, please retry");
+    if (a.finishReason !== "SUCCESS" || !a.base64) return fail(res, 422, "The image was blocked by the safety filter. Try a different prompt.");
+    return json(res, 200, { created: Math.floor(Date.now() / 1000), model: IMAGE_MODEL, data: [{ b64_json: a.base64, mime_type: "image/jpeg", width, height }] });
+  } catch {
+    if (!res.headersSent) return fail(res, 504, "Image generation timed out, please retry");
+  } finally { clearTimeout(timer); }
+}
+
 const server = http.createServer(async (req, res) => {
   try {
     const url = new URL(req.url || "/", "http://x");
@@ -95,6 +139,7 @@ const server = http.createServer(async (req, res) => {
       return json(res, 200, { object: "list", data: [...MODELS].map((id) => ({ id, object: "model", owned_by: "nvidia" })) });
     }
 
+    if (req.method === "POST" && url.pathname === "/v1/images/generations") return images(req, res);
     if (req.method !== "POST" || url.pathname !== "/v1/chat/completions") return fail(res, 404, "Not found");
 
     const client = clientId(req);
