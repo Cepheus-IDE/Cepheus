@@ -23,9 +23,9 @@ export const FREE_OPTIONS = `${c.bold("Ways to start for free")}
      OpenAI-compatible endpoint. Some providers have free tiers; check their pricing pages.`;
 
 /** Shown when Cepheus runs on the free tier because nothing is configured yet. */
-export const FREE_TIER_NOTICE = `${c.bold("Welcome to Cepheus!")} You're on the ${c.bold("Cepheus Free tier")} (NVIDIA Nemotron, no key needed).
-${c.gray("Fair-use limits: 20 requests/min, 400/day. For higher limits set NVIDIA_API_KEY (free at https://build.nvidia.com)")}
-${c.gray("or another provider's key, or run `cepheus login`.")}`;
+export const FREE_TIER_NOTICE = `${c.accent(sym.mark)} ${c.bold("Welcome to Cepheus!")} You are on the ${c.bold("Cepheus Free tier")} ${c.gray("(NVIDIA Nemotron, no key needed)")}
+${c.gray("  Fair-use limits: 20 requests/min, 400/day. For higher limits set NVIDIA_API_KEY (free at https://build.nvidia.com)")}
+${c.gray("  or another provider's key, or run `cepheus login`.")}`;
 
 function presetLine(p: ProviderPreset, cfg: CepheusConfig): string {
   const env = envKey(p.id);

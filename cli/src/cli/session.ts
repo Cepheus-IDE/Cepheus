@@ -13,7 +13,7 @@ import { McpManager } from "../node/mcp.js";
 import { loadConfig, resolveProvider, saveConfig, mask, type CepheusConfig, type Resolved } from "../node/config.js";
 import { TerminalRenderer, formatDiff } from "./render.js";
 import { Input } from "./input.js";
-import { c, sym } from "./ansi.js";
+import { box, c, readWidth, sym, truncStart } from "./ansi.js";
 import { VERSION } from "../version.js";
 
 export const INIT_PROMPT =
@@ -65,6 +65,8 @@ export class Controller {
   readonly changes = new Map<string, Change>();
   usageByModel = new Map<string, { input: number; output: number }>();
   private note: string | null = null;
+  /** File changes of the last finished turn (for the summary line). */
+  lastTurn = { files: 0, added: 0, removed: 0 };
   private nonInteractiveWarned = false;
 
   constructor(o: SessionOptions) {
@@ -84,25 +86,25 @@ export class Controller {
   private async preview(req: ApprovalRequest): Promise<string> {
     const a = req.args ?? {};
     try {
-      if (req.name === "run_command") return `  ${c.cyan(sym.run)} ${c.bold(String(a.command ?? ""))}`;
+      if (req.name === "run_command") return `    ${c.accent(sym.run)} ${c.bold(String(a.command ?? ""))}`;
       if (req.name === "edit_file" || req.name === "write_file") {
         const abs = path.resolve(this.host.root, String(a.path ?? ""));
         const before = existsSync(abs) ? readFileSync(abs, "utf8") : null;
         let after: string;
         if (req.name === "write_file") after = String(a.content ?? "");
         else {
-          if (before == null) return `  ${c.yellow(sym.edit)} edit ${a.path} ${c.red("(file not found)")}`;
+          if (before == null) return `    ${c.accent(sym.edit)} edit ${a.path} ${c.red("(file not found)")}`;
           try {
             after = applyEdit(before, String(a.old_str ?? ""), String(a.new_str ?? ""));
           } catch (e: any) {
-            return `  ${c.yellow(sym.edit)} edit ${a.path} ${c.red(`(${e.message})`)}`;
+            return `    ${c.accent(sym.edit)} edit ${a.path} ${c.red(`(${e.message})`)}`;
           }
         }
         const st = diffStats(before, after);
         const verb = req.name === "write_file" ? (before == null ? "create" : "overwrite") : "edit";
-        return `  ${c.yellow(sym.edit)} ${verb} ${a.path} ${c.green("+" + st.added)} ${c.red(sym.minus + st.removed)}\n${formatDiff(before, after, 40, 2)}`;
+        return `    ${c.accent(sym.edit)} ${verb} ${c.bold(String(a.path))} ${c.green("+" + st.added)} ${c.red(sym.minus + st.removed)}\n${formatDiff(before, after, 40, 2)}`;
       }
-      return `  ${c.magenta(req.name)} ${c.gray(JSON.stringify(a).slice(0, 400))}`;
+      return `    ${c.magenta(req.name)} ${c.gray(JSON.stringify(a).slice(0, 400))}`;
     } catch {
       return `  ${req.name}`;
     }
@@ -124,10 +126,12 @@ export class Controller {
       return false;
     }
     this.renderer.flush();
-    out(c.yellow(c.bold("? Approval needed")));
+    out();
+    out(`  ${c.accent(c.bold("?"))} ${c.bold("Approval needed")}`);
     out(await this.preview(req));
     const what = req.name === "run_command" ? "commands" : group === "edits" ? "file edits" : `'${req.name}'`;
-    const ans = await input.ask(`${c.bold("Allow?")} ${c.cyan("[y]")}es / ${c.cyan("[n]")}o / ${c.cyan("[a]")}lways allow ${what} this session: `);
+    const key = (k: string, rest: string) => `${c.accent(c.bold("[" + k + "]"))}${c.gray(rest)}`;
+    const ans = await input.ask(`\n  ${c.bold("Allow?")}  ${key("y", "es")}  ${key("n", "o")}  ${key("a", `lways allow ${what} this session`)}  ${c.accent(sym.prompt)} `);
     const a = (ans ?? "").trim().toLowerCase();
     if (a === "a" || a === "always") {
       this.alwaysAllow.add(group);
@@ -185,6 +189,14 @@ export class Controller {
       );
     } finally {
       this.abort = null;
+      let added = 0;
+      let removed = 0;
+      for (const ch of this.current.values()) {
+        const st = diffStats(ch.before, ch.after ?? "");
+        added += st.added;
+        removed += st.removed;
+      }
+      this.lastTurn = { files: this.current.size, added, removed };
       if (this.current.size) this.turns.push(this.current);
       this.current = null;
       if (!emit) this.renderer.flush();
@@ -350,32 +362,75 @@ export class Controller {
     out(`${c.green(sym.ok)} provider ${c.bold(preset.label)} ${sym.dot} model ${c.bold(r.config.model)} ${c.gray("(/model to change)")}`);
   }
 
+  /** Short folder name for headers: ~ for the home folder. */
+  folderLabel(max: number): string {
+    const home = path.resolve(os.homedir());
+    let f = this.host.root;
+    if (f.toLowerCase().startsWith(home.toLowerCase()) && f.length > home.length) f = "~" + f.slice(home.length);
+    return truncStart(f, max);
+  }
+
+  modeLabel(): string {
+    const m = this.mode === "turbo" ? c.yellow("turbo") : this.mode === "auto-edit" ? c.yellow("auto-edit") : "ask";
+    return this.plan ? `${m} ${c.gray(sym.dot)} ${c.magenta("plan mode")}` : m;
+  }
+
+  /** Header of one-shot runs: brand, model, mode and folder. */
+  header() {
+    const r = this.resolved;
+    out(`${c.accent(sym.mark)} ${c.bold("Cepheus")} ${c.gray("v" + VERSION)}  ${c.gray(sym.dot)}  ${r.config.model}  ${c.gray(sym.dot)}  ${this.modeLabel()}`);
+    out(c.gray(`  ${r.preset.label} ${sym.dot} ${this.folderLabel(readWidth() - 30)}`));
+    out();
+  }
+
   banner() {
     const r = this.resolved;
-    const model = r.config.fallbacks?.length ? `${r.config.model} ${c.gray(`(+${r.config.fallbacks.length} fallbacks)`)}` : r.config.model;
-    out(`${c.bold(c.cyan("Cepheus"))} ${c.gray("v" + VERSION)} ${sym.dot} ${r.preset.label} ${sym.dot} ${model}`);
-    out(c.gray(`${this.host.root} ${sym.dot} mode ${this.mode}${this.plan ? " · plan mode" : ""} ${sym.dot} /help for commands, Ctrl+C to cancel`));
+    const w = Math.min(readWidth(), 78);
+    const inner = w - 4;
+    const n = r.config.fallbacks?.length ?? 0;
+    const fallbacks = n ? c.gray(` +${n} fallback${n === 1 ? "" : "s"}`) : "";
+    const label = (k: string) => c.gray(k.padEnd(10));
+    const lines = [
+      `${c.accent(sym.mark)} ${c.bold("Cepheus")}  ${c.gray("v" + VERSION)}`,
+      "",
+      `  ${label("model")}${truncStart(r.config.model, inner - 26)}${fallbacks}`,
+      `  ${label("provider")}${r.preset.label}`,
+      `  ${label("folder")}${this.folderLabel(inner - 14)}`,
+      `  ${label("mode")}${this.modeLabel()}`,
+      "",
+      c.gray(`  /help commands  ${sym.dot}  Ctrl+C cancel  ${sym.dot}  \\ at line end for more`),
+    ];
+    out(box(lines, w));
     const home = path.resolve(os.homedir()).replace(/\\/g, "/").toLowerCase();
     if (this.host.root.toLowerCase() === home || /^[a-z]:\/?$|^\/$/i.test(this.host.root))
-      out(c.yellow(`${sym.warn} You're in your home or a root folder; start Cepheus in a project folder (or use --cwd).`));
+      out(c.yellow(`  ${sym.warn} You're in your home or a root folder; start Cepheus in a project folder (or use --cwd).`));
   }
 }
 
-export const HELP_REPL = `${c.bold("Commands")}
-  /help                 this help
-  /model [id|auto]      list models (live) and pick one, or set it directly
-  /provider [id]        switch provider (${PRESETS.map((p) => p.id).join(", ")})
-  /mode ask|auto-edit|turbo
-                        ask: approve edits and commands ${sym.dot} auto-edit: approve commands ${sym.dot} turbo: no prompts
-  /plan on|off          read-only planning mode (no edits, no commands)
-  /undo [--force]       revert the files changed in the last turn
-  /diff                 show all file changes of this session
-  /cost                 token usage
-  /skills               skills, instructions, hooks and MCP servers found
-  /init                 explore the project and write AGENTS.md
-  /clear                start a new conversation
-  /exit                 quit (or Ctrl+C twice)
-${c.gray("Type while the agent works to send it an extra message. End a line with \\ to continue on the next line.")}`;
+const helpRow = (cmd: string, desc: string) => {
+  const [name, ...rest] = cmd.split(" ");
+  const args = rest.length ? " " + rest.join(" ") : "";
+  return `  ${c.accent(name)}${c.soft(args)}${" ".repeat(Math.max(2, 26 - cmd.length))}${c.gray(desc)}`;
+};
+export const HELP_REPL = [
+  `${c.accent(sym.mark)} ${c.bold("Commands")}`,
+  "",
+  helpRow("/help", "this help"),
+  helpRow("/model [id|auto]", "list models (live) and pick one, or set it directly"),
+  helpRow("/provider [id]", `switch provider (${PRESETS.slice(0, 4).map((p) => p.id).join(", ")}, ${sym.ellipsis})`),
+  helpRow("/mode ask|auto-edit|turbo", ""),
+  `${" ".repeat(28)}${c.gray(`ask: approve edits and commands ${sym.dot} auto-edit: approve commands ${sym.dot} turbo: no prompts`)}`,
+  helpRow("/plan on|off", "read-only planning mode (no edits, no commands)"),
+  helpRow("/undo [--force]", "revert the files changed in the last turn"),
+  helpRow("/diff", "show all file changes of this session"),
+  helpRow("/cost", "token usage"),
+  helpRow("/skills", "skills, instructions, hooks and MCP servers found"),
+  helpRow("/init", "explore the project and write AGENTS.md"),
+  helpRow("/clear", "start a new conversation"),
+  helpRow("/exit", "quit (or Ctrl+C twice)"),
+  "",
+  c.gray("  Type while the agent works to send it an extra message. End a line with \\ to continue on the next line."),
+].join("\n");
 
 /** The interactive REPL. Resolves with the exit code. */
 export async function runRepl(ctl: Controller, input: Input): Promise<number> {
@@ -395,7 +450,7 @@ export async function runRepl(ctl: Controller, input: Input): Promise<number> {
     resolveExit(code);
   };
   const promptText = () =>
-    `\n${ctl.plan ? c.magenta("[plan] ") : ""}${ctl.mode !== "ask" ? c.yellow(`[${ctl.mode}] `) : ""}${c.cyan(c.bold(sym.prompt))} `;
+    `\n${ctl.plan ? c.magenta("plan ") : ""}${ctl.mode !== "ask" ? c.yellow(`${ctl.mode} `) : ""}${c.accent(c.bold(sym.prompt))} `;
   const showPrompt = () => {
     if (exitCode == null) input.prompt(promptText());
   };
@@ -498,12 +553,18 @@ export async function runRepl(ctl: Controller, input: Input): Promise<number> {
       }
     }
     const before = { ...ctl.session.usage };
-    const changedBefore = ctl.changes.size;
-    await ctl.runTurn(t);
+    const started = Date.now();
+    out();
+    const st = await ctl.runTurn(t);
     const u = ctl.session.usage;
-    const bits = [`${fmtTokens(u.inputTokens - before.inputTokens)} in ${sym.dot} ${fmtTokens(u.outputTokens - before.outputTokens)} out`];
-    if (ctl.changes.size !== changedBefore || ctl.changes.size) bits.push(`${ctl.changes.size} file${ctl.changes.size === 1 ? "" : "s"} changed (/diff, /undo)`);
-    out(c.gray(bits.join(` ${sym.dot} `)));
+    ctl.renderer.summary({
+      status: st,
+      ms: Date.now() - started,
+      ...ctl.lastTurn,
+      input: u.inputTokens - before.inputTokens,
+      output: u.outputTokens - before.outputTokens,
+      hint: ctl.lastTurn.files ? "/diff  /undo" : undefined,
+    });
   };
 
   input.onLine = (line: string) => {
@@ -548,10 +609,12 @@ export async function runOnce(ctl: Controller, input: Input | null, prompt: stri
   };
   if (input) input.onSigint = onSigint;
   else process.on("SIGINT", onSigint);
-  out(c.gray(`Cepheus ${sym.dot} ${ctl.resolved.preset.label} ${sym.dot} ${ctl.resolved.config.model} ${sym.dot} mode ${ctl.mode}${ctl.plan ? " · plan" : ""}`));
+  ctl.header();
+  ctl.renderer.task(prompt);
+  const started = Date.now();
   const st = await ctl.runTurn(prompt);
   const u = ctl.session.usage;
-  out(c.gray(`${fmtTokens(u.inputTokens)} in ${sym.dot} ${fmtTokens(u.outputTokens)} out${ctl.changes.size ? ` ${sym.dot} ${ctl.changes.size} file(s) changed` : ""}`));
+  ctl.renderer.summary({ status: st, ms: Date.now() - started, ...ctl.lastTurn, input: u.inputTokens, output: u.outputTokens });
   ctl.mcp.close();
   return st === "idle" ? 0 : st === "stopped" ? 130 : 1;
 }
