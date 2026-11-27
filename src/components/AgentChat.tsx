@@ -12,6 +12,7 @@ import { shortModel, useNvidiaModels } from "../lib/nvidia";
 import { ModelPicker } from "./ModelPicker";
 import { takePrefill } from "../lib/continuity";
 import { ComposerOptions, ContextChips, DebugLog, PlanActions } from "./AgentExtras";
+import SkillQuickPick from "./SkillQuickPick";
 
 /** Per-session composer draft and scroll position, kept across remounts (pop out / dock). */
 const drafts = new Map<string, string>();
@@ -192,7 +193,7 @@ export default function AgentChat({ sessionId, compact }: { sessionId: string; c
   const setText = (t: string) => { drafts.set(sessionId, t); setTextRaw(t); };
   // Prompt from a cepheus://agent/new?prompt=… link (prefilled, never auto-sent).
   useEffect(() => { const p = takePrefill(sessionId); if (p) setText(p); }, [sessionId]); // eslint-disable-line react-hooks/exhaustive-deps
-  const [withContext, setWithContext] = useState(true);
+  const [withContext, setWithContext] = useState(() => get().settings.agentIncludeOpenFile ?? true); // Settings › Agent
   const scroller = useRef<HTMLDivElement>(null);
   const stick = useRef(scrollPos.get(sessionId)?.stick ?? true);
 
@@ -304,6 +305,7 @@ export default function AgentChat({ sessionId, compact }: { sessionId: string; c
           )}
           {/* Agent platform (AgentExtras.tsx): Plan mode, Verify with checks, custom agent. */}
           <ComposerOptions session={session} />
+          <SkillQuickPick sessionId={session.id} text={text} setText={setText} />
           <div className="spacer" />
           {/* Language Models (ModelPicker.tsx): harness + model for every provider, Auto, effort. */}
           <ModelPicker sessionId={session.id} />

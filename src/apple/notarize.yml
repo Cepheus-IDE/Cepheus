@@ -1,0 +1,18 @@
+      - name: Sign, notarize and staple
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+        run: |
+          set -euo pipefail
+          if [ -z "$SIGN_IDENTITY" ]; then echo "::error::No 'Developer ID Application' identity in MACOS_CERT_P12_BASE64."; exit 1; fi
+          if [ -z "$ASC_KEY_P8" ]; then echo "::error::Set ASC_KEY_ID, ASC_ISSUER_ID and ASC_KEY_P8 to notarize."; exit 1; fi
+          printf '%s' "$ASC_KEY_P8" > "$RUNNER_TEMP/AuthKey.p8"
+          APP="$(find out -maxdepth 1 -name '*.app' | head -1)"
+          NAME="$(basename "$APP" .app)"
+          codesign --force --deep --options runtime --timestamp --keychain "$KEYCHAIN" --sign "$SIGN_IDENTITY" "$APP"
+          rm -f out/*.dmg
+          hdiutil create -volname "$NAME" -srcfolder "$APP" -ov -format UDZO "out/$NAME.dmg"
+          codesign --timestamp --keychain "$KEYCHAIN" --sign "$SIGN_IDENTITY" "out/$NAME.dmg"
+          xcrun notarytool submit "out/$NAME.dmg" --key "$RUNNER_TEMP/AuthKey.p8" --key-id "$ASC_KEY_ID" --issuer "$ASC_ISSUER_ID" --wait
+          xcrun stapler staple "out/$NAME.dmg"

@@ -8,12 +8,17 @@ import ExtensionsPanel from "./ExtensionsPanel";
 import RemotePanel from "./RemotePanel";
 import DebugPanel from "./DebugPanel";
 import TestExplorer from "./TestExplorer";
+import SkillsView from "./SkillsView";
+import AppleBuildPanel from "./AppleBuildPanel";
+import Toolbox from "./Toolbox";
 
 export default function Sidebar() {
   const view = useStore((s) => s.sidebar);
   switch (view) {
     case "explorer":
       return <Explorer />;
+    case "apple":
+      return <AppleBuildPanel />;
     case "search":
       return <SearchPanel />;
     case "git":
@@ -28,6 +33,10 @@ export default function Sidebar() {
       return <TestExplorer />;
     case "remote":
       return <RemotePanel />;
+    case "skills":
+      return <SkillsView />;
+    case "toolbox":
+      return <Toolbox />;
     case "agents":
       return (
         <div className="panel">

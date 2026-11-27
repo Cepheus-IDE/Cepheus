@@ -12,6 +12,8 @@ import GitBranches from "./GitBranches";
 import Timeline from "./Timeline";
 import { ConfirmButton } from "./GitWidgets";
 import { openBranchPicker } from "./BranchPicker";
+import { guardCommit } from "../lib/toolbox/secretGuard";
+import { SecretGuardBanner } from "./ToolboxOverlay";
 
 const isConflict = (f: GitFile) => f.index === "U" || f.worktree === "U" || (f.index === "A" && f.worktree === "A") || (f.index === "D" && f.worktree === "D");
 const NEEDS_IDENTITY = /Author identity unknown|tell me who you are|empty ident/i;
@@ -37,7 +39,7 @@ export default function GitPanel() {
   const token = useStore((s) => s.settings.githubToken);
   const [stashes, setStashes] = useState<{ index: number; message: string }[]>([]);
   const [identity, setIdentity] = useState<{ name: string; email: string; global: boolean } | null>(null);
-  const [opts, setOpts] = useState<CommitOpts>({ mode: "smart", amend: false, signoff: false });
+  const [opts, setOpts] = useState<CommitOpts>(() => ({ mode: useStore.getState().settings.gitSmartCommit === false ? "staged" : "smart", amend: false, signoff: false })); // Settings › Git › Smart commit
   const [optsOpen, setOptsOpen] = useState(false);
   const loadStashes = () => { if (ws && git?.isRepo) api.gitStashList(ws).then(setStashes).catch(() => setStashes([])); };
   // Reload stashes whenever git status changes.
@@ -73,7 +75,13 @@ export default function GitPanel() {
         {tab === "timeline" ? <Timeline /> : (
           <div className="empty-state">
             <p>This folder is not a Git repository.</p>
-            <button className="btn primary" onClick={async () => { try { await api.gitInit(ws); refreshGit(); } catch (e) { toast(errMsg(e), "error"); } }}>
+            <button className="btn primary" onClick={async () => { try {
+              await api.gitInit(ws);
+              // Settings › Git › Initial branch name (HEAD has no commits yet, so just repoint it).
+              const branch = useStore.getState().settings.gitDefaultBranch?.trim();
+              if (branch) await gitx.run(ws, ["symbolic-ref", "HEAD", `refs/heads/${branch}`]).catch((e) => toast(errMsg(e), "error"));
+              refreshGit();
+            } catch (e) { toast(errMsg(e), "error"); } }}>
               Initialize Repository
             </button>
           </div>
@@ -111,6 +119,13 @@ export default function GitPanel() {
     await gitx.run(ws, args);
   };
 
+  /** Settings › Git › After commit: push or sync. */
+  const afterCommit = () => {
+    const post = useStore.getState().settings.gitPostCommit;
+    if (post === "sync") setTimeout(() => syncNow(), 0);
+    else if (post === "push") setTimeout(() => api.gitSync(ws, "push", useStore.getState().settings.githubToken).then(() => { toast("Pushed"); refreshGit(); bumpRefs(); }).catch((e) => toast(errMsg(e), "error")), 0);
+  };
+
   const commit = () =>
     act("commit", async () => {
       if (!msg.trim() && !opts.amend) throw new Error("Enter a commit message");
@@ -118,6 +133,8 @@ export default function GitPanel() {
       const stageAll = opts.mode === "all" || (opts.mode === "smart" && staged.length === 0);
       if (opts.mode === "staged" && staged.length === 0 && !opts.amend) throw new Error("Nothing is staged");
       if (stageAll && changes.length) await api.gitStage(ws, changes.map((f) => f.path));
+      // Toolbox secret guard: hold the commit when the staged diff looks like it leaks credentials.
+      if (!(await guardCommit(ws, commit))) return "Commit held: the staged changes may contain secrets";
       try {
         await runCommit();
       } catch (e) {
@@ -130,6 +147,7 @@ export default function GitPanel() {
       }
       setMsg("");
       if (opts.amend) setOpts({ ...opts, amend: false });
+      afterCommit();
       return opts.amend ? "Amended last commit" : "Committed";
     });
 
@@ -257,6 +275,7 @@ export default function GitPanel() {
                 <i className={`codicon codicon-${busy === "gen" ? "loading codicon-modifier-spin" : "sparkle"}`} />
               </button>
             </div>
+            <SecretGuardBanner onCommitAnyway={commit} />
             {optsOpen && (
               <div className="commit-opts">
                 <label className="check small"><input type="radio" checked={opts.mode === "smart"} onChange={() => setOpts({ ...opts, mode: "smart" })} /> Staged changes, or everything when nothing is staged</label>

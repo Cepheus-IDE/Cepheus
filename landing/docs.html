@@ -52,6 +52,7 @@
         <a href="#settings">Settings and profiles</a>
         <a href="#shortcuts">Keyboard shortcuts</a>
         <a href="#teams">For teams</a>
+        <a href="#apple">Apple apps without a Mac</a>
         <a href="#source">Build from source</a>
       </nav>
 
@@ -118,6 +119,10 @@ description: Write release notes from the git log since the last tag
 ---
 1. Run `git describe --tags --abbrev=0` to find the last tag.
 2. Group commits into Features, Fixes and Other.</code></pre>
+          <h3>Skill gallery</h3>
+          <p>Open <strong>Skills</strong> in the activity bar (the light bulb). <strong>Installed</strong> lists Project skills (<code>.cepheus/skills</code>) and User skills (your app data folder, shared by every project): open, disable, duplicate, export, reveal or delete each one. A Project skill hides a User skill with the same name. Disabled skills move to a <code>.disabled</code> folder that the agent ignores.</p>
+          <p><strong>Gallery</strong> has 26 built-in skills, such as unit tests, fixing failing tests, code and security review, accessibility and performance audits, Docker, CI, migrations and release notes. Preview a skill, then install it into Project or User scope. When Cepheus ships a newer <code>version</code>, the skill shows an <strong>Update</strong> button.</p>
+          <p>Use <strong>New skill</strong> to write one with a live Markdown preview and extra files, or <strong>Create skill from conversation</strong> to draft one from the current agent task (<strong>Improve with AI</strong> turns it into general steps). Skills export to and import from single <code>.cepheus-skill</code> files. To run a skill, pick it from <strong>skills</strong> in the chat footer, or run <strong>Skills: Run Skill…</strong> from the command palette to start a new task with it.</p>
           <h3>Custom agents</h3>
           <p>Files in <code>.cepheus/agents/</code> define agents with their own instructions, an allowed tool list and an optional model. Pick one from the agent menu in the chat footer.</p>
 <pre><code>.cepheus/agents/reviewer.md
@@ -264,6 +269,19 @@ Review the uncommitted changes. Report bugs by severity with file:line.</code></
   "proxy": "http://proxy.internal:8080"
 }</code></pre>
           <p>Locked settings show <b>Managed by your organization</b> in the app. Policy can also set allowed models and agent tools, preinstalled extensions, a private extension registry, extra trusted certificates and the update mode.</p>
+        </section>
+
+        <section class="reveal-up" id="apple">
+          <h2>Apple apps without a Mac</h2>
+          <p>The <b>Apple Builds</b> view (or <b>Run › Build for iOS / macOS (Cloud)…</b>) builds iOS and macOS apps on GitHub-hosted macOS runners, so you can work on Windows or Linux. Cepheus does not run macOS in a virtual machine.</p>
+          <ul>
+            <li><b>Detects</b> Xcode projects and workspaces, Swift packages, Flutter, React Native, Expo, Tauri, Capacitor, Kotlin Multiplatform and .NET MAUI.</li>
+            <li><b>Generates</b> <code>.github/workflows/cepheus-apple.yml</code> for your project: an iOS Simulator build, an unsigned macOS app and <code>.dmg</code>, tests, and optionally a signed <code>.ipa</code> with TestFlight upload or a notarized macOS build. You see a diff before the file is written, and an existing file is only replaced after you confirm.</li>
+            <li><b>Runs and monitors</b> the build: start it with your choice of scheme, configuration and target, watch jobs and steps, read step logs, cancel or re-run, and download artifacts into <code>artifacts/&lt;run-id&gt;/</code>. The workflow must be committed and pushed first; Cepheus can commit it for you, and you push with <b>Sync</b>.</li>
+            <li><b>Expo</b>: <b>Preview on iPhone with Expo Go</b> runs <code>npx expo start --tunnel</code> and shows a QR code to scan with the free Expo Go app. <b>Build with EAS</b> runs <code>npx eas-cli build --platform ios</code>, which needs an Expo account.</li>
+            <li><b>Swift packages</b> without UIKit, SwiftUI or AppKit can be built and tested locally when Swift for Windows or Linux is installed.</li>
+          </ul>
+          <p>Simulator and unsigned macOS builds need no Apple account. Running on a real iPhone, TestFlight and the App Store require an Apple Developer Program membership and code signing. Certificates, provisioning profiles and App Store Connect keys are read only from your repository's GitHub secrets; the view lists the exact secret names and links to the settings page. GitHub-hosted runners are free for public repositories; for private repositories, macOS minutes are billed under <a href="https://docs.github.com/billing">GitHub's billing policy</a>.</p>
         </section>
 
         <section class="reveal-up" id="source">

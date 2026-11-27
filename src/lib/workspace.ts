@@ -8,6 +8,9 @@ import { mergeSettings, Settings } from "./settings";
 import { applyTheme } from "./themes";
 import { applyPolicy, loadPolicy } from "./policy";
 import { userLevel } from "./settingsLevels";
+import { applyModelOptions } from "./editorOptions";
+import { previewPlan } from "./tabPreview";
+import { isExcluded } from "./explorerOptions";
 
 // ----------------------------------------------------------------------------------------------
 // Text models (one per open file, shared between tabs and the agent's live updates)
@@ -30,7 +33,10 @@ async function ensureModel(path: string): Promise<ModelEntry> {
   const content = await api.readFile(path);
   const uri = monaco.Uri.file(path);
   const model = monaco.editor.getModel(uri) ?? monaco.editor.createModel(content, languageForPath(path), uri);
-  model.updateOptions({ tabSize: get().settings.tabSize });
+  applyModelOptions(model, get().settings);
+  // Settings › Editor › Default line ending: only for files without line breaks yet.
+  const eolPref = get().settings.eol;
+  if (eolPref && eolPref !== "auto" && !/\n/.test(content)) model.setEOL(eolPref === "crlf" ? monaco.editor.EndOfLineSequence.CRLF : monaco.editor.EndOfLineSequence.LF);
   const entry: ModelEntry = {
     path,
     model,
@@ -38,7 +44,7 @@ async function ensureModel(path: string): Promise<ModelEntry> {
     disposeListener: model.onDidChangeContent(() => {
       const isDirty = model.getAlternativeVersionId() !== entry.savedVersion;
       if (!!get().dirty[path] !== isDirty) set((s) => ({ dirty: { ...s.dirty, [path]: isDirty } }));
-      if (isDirty && get().settings.autoSave) scheduleAutoSave(path);
+      if (isDirty && get().settings.autoSave && (get().settings.autoSaveMode ?? "afterDelay") === "afterDelay") scheduleAutoSave(path);
     }),
   };
   models.set(key(path), entry);
@@ -48,7 +54,7 @@ async function ensureModel(path: string): Promise<ModelEntry> {
 const autoSaveTimers = new Map<string, number>();
 function scheduleAutoSave(path: string) {
   clearTimeout(autoSaveTimers.get(path));
-  autoSaveTimers.set(path, window.setTimeout(() => saveFile(path), 1000));
+  autoSaveTimers.set(path, window.setTimeout(() => saveFile(path), Math.max(100, get().settings.autoSaveDelay ?? 1000)));
 }
 
 function disposeModel(path: string) {
@@ -89,7 +95,9 @@ export async function saveSettings(s: Settings) {
     applyZoom(s.uiZoom);
     toast(`Zoom ${Math.round(s.uiZoom * 100)}%`);
   }
-  for (const e of models.values()) e.model.updateOptions({ tabSize: s.tabSize });
+  if (prev.tabSize !== s.tabSize || prev.insertSpaces !== s.insertSpaces || prev.detectIndentation !== s.detectIndentation) {
+    for (const e of models.values()) applyModelOptions(e.model, s);
+  }
   try {
     await api.saveSettings(userLevel(s)); // workspace (.cepheus/settings.json) overrides stay out of the user file
   } catch (e) {
@@ -150,12 +158,19 @@ export async function openFile(path: string, line?: number, col?: number) {
     return;
   }
   const id = "file:" + key(path);
-  set((s) => ({
-    tabs: s.tabs.some((t) => t.id === id) ? s.tabs : [...s.tabs, { id, kind: "file", path, title: basename(path) }],
-    activeId: id,
-    view: "editor",
-    pendingReveal: line ? { path, line, col: col ?? 1 } : s.pendingReveal,
-  }));
+  // Preview tabs: the new tab goes next to the clean preview tab it replaces.
+  const replace = previewPlan(id, get().tabs.some((t) => t.id === id));
+  set((s) => {
+    const tab: Tab = { id, kind: "file", path, title: basename(path) };
+    const at = replace ? s.tabs.findIndex((t) => t.id === replace) + 1 : s.tabs.length;
+    return {
+      tabs: s.tabs.some((t) => t.id === id) ? s.tabs : [...s.tabs.slice(0, at), tab, ...s.tabs.slice(at)],
+      activeId: id,
+      view: "editor",
+      pendingReveal: line ? { path, line, col: col ?? 1 } : s.pendingReveal,
+    };
+  });
+  if (replace) await closeTab(replace, true);
 }
 
 /** Opens the extension details page in an editor tab (like VS Code). */
@@ -211,6 +226,8 @@ export async function saveFile(path?: string) {
   const e = models.get(key(p));
   if (!e) return;
   try {
+    // Format on save / trim whitespace / final newline (Settings › Editor › On save).
+    await import("./saveActions").then((m) => m.beforeSave(e.model)).catch((err) => console.warn("save actions", err));
     const content = e.model.getValue();
     await api.writeFile(p, content);
     api.historySave(p, content, "save").catch(() => {});
@@ -230,6 +247,12 @@ export async function saveAll() {
 
 /** Called on file-system change events: reload clean models from disk (e.g. after agent edits). */
 export async function onFsChanged(paths: string[]) {
+  // Settings › Files › Ignore changes in (watcher exclude globs).
+  const ignore = get().settings.watcherExclude ?? [];
+  if (ignore.length) {
+    paths = paths.filter((p) => !isExcluded(get().workspace, p, ignore));
+    if (!paths.length) return;
+  }
   for (const p of paths) {
     const e = models.get(key(p));
     if (!e) continue;

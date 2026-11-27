@@ -132,6 +132,30 @@ export const commands: Command[] = [
   // Integrated browser (src/lib/browser.ts)
   { id: "browser.open", label: "Browser: Open URL…", run: async () => { await (await import("./browser")).openBrowser("", "none"); } },
   { id: "browser.preview", label: "Browser: Open Preview of Current HTML File", run: async () => (await import("./browser")).previewActiveFile() },
+  // Apple Builds: iOS / macOS on GitHub-hosted macOS runners (src/lib/appleBuild.ts)
+  { id: "apple.open", label: "Apple Builds: Show iOS / macOS Cloud Builds", run: async () => (await import("./appleBuild")).openAppleBuilds() },
+  { id: "apple.generateWorkflow", label: "Apple Builds: Generate GitHub Actions Workflow…", run: async () => (await import("./appleBuild")).commandGenerateWorkflow() },
+  { id: "apple.expoGo", label: "Apple Builds: Preview on iPhone with Expo Go", run: async () => (await import("./appleBuild")).commandExpoGo() },
+  // Agent skills (src/lib/skills.ts)
+  { id: "skills.run", label: "Skills: Run Skill…", run: async () => (await import("./skills")).useSkillsUI.setState({ runPicker: true }) },
+  { id: "skills.show", label: "Skills: Show Installed Skills", run: async () => (await import("./skills")).showSkills("installed") },
+  { id: "skills.gallery", label: "Skills: Browse Skill Gallery", run: async () => (await import("./skills")).showSkills("gallery") },
+  { id: "skills.new", label: "Skills: New Skill…", run: async () => (await import("./skills")).newSkill() },
+  { id: "skills.fromSession", label: "Skills: Create Skill from Current Agent Task…", run: async () => (await import("./skills")).skillFromSession() },
+  { id: "skills.importUser", label: "Skills: Import Skill (User)…", run: async () => (await import("./skills")).importSkill("user") },
+  { id: "skills.importProject", label: "Skills: Import Skill (Project)…", run: async () => (await import("./skills")).importSkill("project") },
+  // Toolbox: everyday micro tools (src/lib/toolbox/*)
+  { id: "toolbox.show", label: "View: Toolbox", run: async () => (await import("./toolbox")).showToolbox() },
+  { id: "toolbox.scripts", label: "Toolbox: Run Project Script…", run: async () => (await import("./toolbox")).showToolbox("tasks") },
+  { id: "toolbox.ports", label: "Toolbox: Show Listening Ports", run: async () => (await import("./toolbox")).showToolbox("ports") },
+  { id: "toolbox.env", label: "Toolbox: Open .env Manager", run: async () => (await import("./toolbox")).showToolbox("env") },
+  { id: "toolbox.todo", label: "Toolbox: Show TODO / FIXME Tree", run: async () => (await import("./toolbox")).showToolbox("todo") },
+  { id: "toolbox.sweep", label: "Toolbox: Free Disk Space (Project Sweeper)", run: async () => (await import("./toolbox")).showToolbox("disk") },
+  { id: "toolbox.utils", label: "Toolbox: Developer Utilities (JSON/YAML/TOML, JWT, Base64, UUID, Regex, Color, Hash, Diff, Cron)", run: async () => (await import("./toolbox")).showToolbox("utils") },
+  { id: "toolbox.present", label: "View: Toggle Presentation Mode (mask secrets)", run: async () => (await import("./toolbox/present")).togglePresenting() },
+  { id: "toolbox.clipboard", label: "Edit: Paste from Clipboard History… (Ctrl+Shift+V in editor)", run: async () => (await import("./toolbox/clipboard")).openClipPicker() },
+  { id: "toolbox.explainError", label: "Terminal: Explain Last Error with Agent", run: async () => (await import("./toolbox")).explainLastFailure() },
+  { id: "toolbox.scanSecrets", label: "Git: Scan Staged Changes for Secrets", run: async () => (await import("./toolbox")).scanStagedForSecrets() },
 ];
 
 /** Effective shortcut for a command: the user's override, else the default. */

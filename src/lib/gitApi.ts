@@ -120,6 +120,11 @@ let syncing = false;
 export async function syncNow() {
   const ws = get().workspace;
   if (!ws || syncing) return;
+  // Settings › Git › Confirm before sync.
+  if (get().settings.gitConfirmSync) {
+    const { confirmDialog } = await import("../components/ConfirmDialog");
+    if (!(await confirmDialog({ title: "Sync with the remote?", message: "Pulls (fast-forward only), then pushes your commits.", confirmLabel: "Sync" }))) return;
+  }
   syncing = true;
   const token = get().settings.githubToken;
   try {

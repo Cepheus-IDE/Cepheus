@@ -23,16 +23,22 @@ import InlineEdit from "./components/InlineEdit";
 import Toasts from "./components/Toasts";
 import ProfilesModal from "./components/ProfilesModal";
 import { DevServerPrompt } from "./components/BrowserTab";
+import ToolboxOverlay from "./components/ToolboxOverlay";
 import { initBrowser } from "./lib/browser";
 import KeybindingsModal from "./components/KeybindingsModal";
 import LanguageModels from "./components/LanguageModels";
+import { SkillsModals } from "./components/SkillsView";
 import { Resizer, usePersistentSize } from "./components/Resizer";
+import { useSettingsEffects } from "./lib/settingsEffects";
 
 export default function App() {
   const sidebar = useStore((s) => s.sidebar);
   const agentOpen = useStore((s) => s.agentOpen);
   const panelOpen = useStore((s) => s.panelOpen);
   const view = useStore((s) => s.view);
+  // Settings › Workbench: side bar on the right mirrors the layout, so resizer drags flip.
+  const flip = useStore((s) => s.settings.sidebarPosition === "right") ? -1 : 1;
+  useSettingsEffects(); // root classes (reduce motion, density…), auto save modes, agent notifications…
   const [sideW, setSideW] = usePersistentSize("sideW", 270);
   const [agentW, setAgentW] = usePersistentSize("agentW", 400);
   const [panelH, setPanelH] = usePersistentSize("panelH", 260);
@@ -96,7 +102,7 @@ export default function App() {
                 <div className="sidebar" style={{ width: sideW }}>
                   <Sidebar />
                 </div>
-                <Resizer dir="x" onDelta={(d) => setSideW((w) => Math.min(600, Math.max(170, w + d)))} />
+                <Resizer dir="x" onDelta={(d) => setSideW((w) => Math.min(600, Math.max(170, w + d * flip)))} />
               </>
             )}
             <div className="center">
@@ -111,7 +117,7 @@ export default function App() {
             </div>
             {agentOpen && (
               <>
-                <Resizer dir="x" onDelta={(d) => setAgentW((w) => Math.min(900, Math.max(300, w - d)))} />
+                <Resizer dir="x" onDelta={(d) => setAgentW((w) => Math.min(900, Math.max(300, w - d * flip)))} />
                 <div className="agent-side" style={{ width: agentW }}>
                   <AgentPanel />
                 </div>
@@ -126,9 +132,11 @@ export default function App() {
       <InlineEdit />
       <KeybindingsModal />
       <LanguageModels />
+      <SkillsModals />
       <ProfilesModal />
       <Toasts />
       <DevServerPrompt />
+      <ToolboxOverlay />
     </div>
   );
 }

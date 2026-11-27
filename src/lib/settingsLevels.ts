@@ -10,6 +10,7 @@ import { api, errMsg } from "./api";
 import { DEFAULT_SETTINGS, mergeSettings, parseJsonc, Settings } from "./settings";
 import { get, set, toast, useStore } from "../store";
 import { registerJsonSchema } from "./jsonSchemas";
+import { settingDef } from "./settingsSchema";
 
 /**
  * Keys a workspace may override. An allowlist on purpose: a cloned repo must not be able to
@@ -20,6 +21,10 @@ export const WORKSPACE_KEYS = new Set<string>([
   "fontSize", "fontFamily", "tabSize", "wordWrap", "minimap", "theme", "iconTheme", "autoSave",
   "inlineBlame", "quickDiff", "inlineCompletion", "uiZoom", "lspWorkspaceDiagnostics",
   "tsSemanticValidation", "accessibilitySupport",
+  // Settings editor: per-project formatting / display conventions (they never run commands).
+  "insertSpaces", "detectIndentation", "rulers", "wordWrapMode", "wordWrapColumn", "renderWhitespace", "lineNumbers",
+  "formatOnSave", "formatOnPaste", "formatOnType", "trimTrailingWhitespace", "insertFinalNewline", "trimFinalNewlines", "eol",
+  "filesExclude", "explorerSortOrder", "autoSaveMode", "autoSaveDelay",
 ]);
 
 let configDir: Promise<string> | null = null;
@@ -236,7 +241,12 @@ function settingsSchema(onlyKeys?: Set<string>) {
   const properties: Record<string, any> = {};
   for (const [k, v] of Object.entries(DEFAULT_SETTINGS)) {
     if (onlyKeys && !onlyKeys.has(k)) continue;
-    properties[k] = { ...schemaFor(v), default: v, ...(DESCRIPTIONS[k] ? { description: DESCRIPTIONS[k] } : {}), ...(ENUMS[k] ? { enum: ENUMS[k] } : {}) };
+    // Descriptions/enums from the Settings editor registry (settingsSchema.ts) fill the gaps.
+    const def = settingDef(k);
+    const desc = DESCRIPTIONS[k] ?? def?.description;
+    const en = ENUMS[k] ?? (def?.control.type === "enum" ? def.control.options.map((o) => o[0]) : undefined);
+    const range = def?.control.type === "number" ? { minimum: def.control.min, maximum: def.control.max } : {};
+    properties[k] = { ...schemaFor(v), default: v, ...range, ...(desc ? { description: desc } : {}), ...(en ? { enum: en } : {}) };
   }
   if (properties.uiZoom) Object.assign(properties.uiZoom, { minimum: 0.5, maximum: 2 });
   if (properties.tabSize) Object.assign(properties.tabSize, { minimum: 1, maximum: 16 });

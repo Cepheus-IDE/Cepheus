@@ -144,6 +144,8 @@ function menus(): { name: string; items: Item[] }[] {
         { label: "Run All Tests", run: cmd("test.runAll") },
         { label: "Run All Tests with Coverage", run: cmd("test.runAllCoverage") },
         { label: "Testing View", run: cmd("view.testing") },
+        "sep",
+        { label: "Build for iOS / macOS (Cloud)…", run: cmd("apple.open") },
       ],
     },
     {
@@ -151,6 +153,24 @@ function menus(): { name: string; items: Item[] }[] {
       items: [
         { label: "New Terminal", keys: "Ctrl+Shift+`", run: () => { set({ panelOpen: true }); window.dispatchEvent(new Event("cepheus:new-terminal")); } },
         { label: "Toggle Terminal", keys: "Ctrl+`", run: cmd("view.toggleTerminal") },
+        "sep",
+        { label: "Explain Last Error with Agent", run: cmd("toolbox.explainError") },
+      ],
+    },
+    {
+      name: "Tools",
+      items: [
+        { label: "Run Project Script…", run: cmd("toolbox.scripts") },
+        { label: "Listening Ports…", run: cmd("toolbox.ports") },
+        { label: ".env Manager", run: cmd("toolbox.env") },
+        { label: "TODO / FIXME Tree", run: cmd("toolbox.todo") },
+        "sep",
+        { label: "Scan Staged Changes for Secrets", run: cmd("toolbox.scanSecrets") },
+        { label: "Presentation Mode (mask secrets)", run: cmd("toolbox.present") },
+        { label: "Clipboard History…", keys: "Ctrl+Shift+V", run: cmd("toolbox.clipboard") },
+        "sep",
+        { label: "Developer Utilities", run: cmd("toolbox.utils") },
+        { label: "Free Disk Space…", run: cmd("toolbox.sweep") },
       ],
     },
     {

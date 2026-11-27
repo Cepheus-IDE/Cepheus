@@ -139,6 +139,7 @@ The agent starts on the free NVIDIA models. Install [Git](https://git-scm.com) t
 | **History** | A commit graph with search, commit details, and a Timeline of git and local history per file. |
 | **Branches and tags** | Checkout, create, rename, delete, merge, rebase; quick branch picker from the status bar. |
 | **GitHub** | Clone and publish repositories; review, comment on, approve and merge pull requests; turn issues into agent tasks. |
+| **Apple apps without a Mac** | Build iOS and macOS apps (Xcode, SwiftPM, Flutter, React Native, Expo, Tauri, Capacitor, KMP, .NET MAUI) on GitHub-hosted macOS runners: generate the workflow, run it, watch the logs and download the artifacts. Expo Go preview by QR code. Real-device, TestFlight and App Store builds need an Apple Developer account and signing secrets. |
 
 ### 🌐 Browser, remote and containers
 
@@ -154,12 +155,33 @@ The agent starts on the free NVIDIA models. Install [Git](https://git-scm.com) t
 | Feature | What it does |
 |---|---|
 | **Themes** | Ink, Graphite, Noir, Moss, Paper, two high-contrast themes, and **Theme Studio** to design your own. |
-| **Extensions** | Color themes, icon themes and snippets from [Open VSX](https://open-vsx.org). No extension code is executed. |
+| **Extensions** | Color themes (incl. high contrast), file icon themes, snippets, TextMate language grammars and editing rules, keymaps (Sublime, Atom, IntelliJ …) and extension packs from [Open VSX](https://open-vsx.org). Featured collections, categories, sorting, compatibility badges, version picker, bulk / auto update. No extension code is executed. |
 | **Import** | Settings, themes and snippets from VS Code, Cursor, Windsurf or VSCodium. |
 | **Settings** | UI or JSON, with user and workspace levels and schema completion. |
 | **Keyboard shortcuts** | Remap any command, Sublime-like or JetBrains-like presets, export a printable list. |
 | **Profiles and Settings Sync** | Bundle settings, shortcuts, extensions, snippets and layout; sync through a private GitHub Gist. |
 | **Zoom** | <kbd>Ctrl</kbd>+<kbd>=</kbd> / <kbd>Ctrl</kbd>+<kbd>-</kbd> / <kbd>Ctrl</kbd>+<kbd>0</kbd>. |
+
+### 🧰 Toolbox
+
+Small tools that save time every day, in the **Toolbox** view and the **Tools** menu.
+
+| Tool | What it does |
+|---|---|
+| **Ports** | See what is listening on every port, open it in the browser, or stop the process. When a command fails with "port already in use", Cepheus offers to free it. |
+| **.env manager** | Masked values, keys used in code but missing from `.env`, and `.env` / `.env.example` kept in step. |
+| **Secret guard** | Scans staged changes before every commit for API keys, tokens, private keys and staged `.env` files, and stops the commit until you confirm. |
+| **Presentation mode** | Blurs `.env` values and secret-looking strings in every editor while you share your screen. |
+| **Scripts** | One-click runs for package.json scripts, Makefile, justfile, Cargo, Composer, Python and Docker Compose tasks, with favorites and last exit code. |
+| **Disk sweeper** | Finds heavy rebuildable folders (`node_modules`, `target`, `.next`, `.venv`, `DerivedData`…) across your projects and moves the ones you pick to the trash. |
+| **TODO tree** | Every TODO, FIXME, HACK and NOTE in the workspace, grouped by file. |
+| **Explain this error** | When a terminal command fails, send the last lines to the agent with one click. |
+| **Dev utilities** | JSON ⇄ YAML ⇄ TOML, JWT decoder, Base64/URL, UUID v4/v7, timestamps, regex tester, color converter, hashes, text diff and a cron explainer. |
+| **Clipboard history** | The last 50 copies made in the editor, searchable, with <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>V</kbd>. Kept in memory only. |
+
+### 🧠 Skills
+
+A **Skills** view with a gallery of 26 ready-made skills (tests, code review, security and accessibility audits, i18n, Docker, CI, release notes and more), one-click install per project or for your user, an editor to write your own, "Create skill from this conversation", and import/export as `.cepheus-skill` files.
 
 ### 🏢 For teams
 
@@ -386,7 +408,7 @@ landing/                      the website (index, why, docs)
 - **The agent is confined** to the open workspace folder, and in **Ask** mode every file write and command needs your approval. Every agent change can be reverted.
 - **Repositories can't take over.** A project's `.cepheus/settings.json` may only change editor and appearance settings, never commands, language servers, providers or approval mode.
 - **Deleting from the explorer** moves files to the Recycle Bin or Trash.
-- Extensions from Open VSX provide themes and snippets only; no extension code runs.
+- Extensions from Open VSX provide declarative data only (themes, icons, snippets, grammars, language rules, keymaps); no extension code runs.
 
 Found a vulnerability? Please open a private security advisory on GitHub instead of a public issue.
 

@@ -64,6 +64,8 @@ export interface Settings {
   telemetryLevel: "off";
   /** Open VSX-compatible registry ("" = https://open-vsx.org). */
   extensionRegistryUrl: string;
+  /** Extension features (src/lib/extensions.ts): grammar overrides, auto-update, pins, active keymap. */
+  extensionOptions: ExtensionOptions;
   /** "automatic" downloads and asks to restart · "startup" checks on start · "manual" · "none". */
   updateMode: "automatic" | "startup" | "manual" | "none";
   /** Language Models: extra named OpenAI-compatible providers. */
@@ -72,6 +74,152 @@ export interface Settings {
   hiddenModels: string[];
   /** Default chat model pick: "" = provider + models[provider], "auto", or "custom:<id>|<model>". */
   modelPick: string;
+
+  // ---- Settings editor (SettingsModal / settingsSchema.ts). Wiring is listed per key there. ----
+  // Motion & accessibility
+  reduceMotion: boolean;
+  cursorBlinking: "blink" | "smooth" | "phase" | "expand" | "solid";
+  cursorSmoothCaretAnimation: "off" | "explicit" | "on";
+  cursorStyle: "line" | "block" | "underline" | "line-thin" | "block-outline" | "underline-thin";
+  cursorWidth: number;
+  smoothScrolling: boolean;
+  mouseWheelScrollSensitivity: number;
+  fastScrollSensitivity: number;
+  highContrastFocus: boolean;
+  uiFontScale: number;
+  reducedTransparency: boolean;
+  // Editor text
+  fontWeight: string;
+  lineHeight: number;
+  letterSpacing: number;
+  fontLigatures: boolean;
+  insertSpaces: boolean;
+  detectIndentation: boolean;
+  wordWrapMode: "viewport" | "column" | "bounded";
+  wordWrapColumn: number;
+  rulers: number[];
+  renderWhitespace: "none" | "boundary" | "selection" | "trailing" | "all";
+  renderControlCharacters: boolean;
+  lineNumbers: "on" | "off" | "relative" | "interval";
+  renderLineHighlight: "none" | "gutter" | "line" | "all";
+  bracketPairColorization: boolean;
+  bracketPairGuides: boolean;
+  indentationGuides: boolean;
+  stickyScroll: boolean;
+  stickyScrollMaxLines: number;
+  minimapSide: "right" | "left";
+  minimapSize: "proportional" | "fill" | "fit";
+  minimapRenderCharacters: boolean;
+  minimapShowSlider: "mouseover" | "always";
+  folding: boolean;
+  foldingStrategy: "auto" | "indentation";
+  glyphMargin: boolean;
+  codeLens: boolean;
+  inlayHints: "on" | "off" | "onUnlessPressed" | "offUnlessPressed";
+  hoverDelay: number;
+  quickSuggestions: boolean;
+  quickSuggestionsDelay: number;
+  acceptSuggestionOnEnter: "on" | "smart" | "off";
+  suggestPreview: boolean;
+  snippetSuggestions: "top" | "bottom" | "inline" | "none";
+  parameterHints: boolean;
+  autoClosingBrackets: "languageDefined" | "always" | "beforeWhitespace" | "never";
+  autoClosingQuotes: "languageDefined" | "always" | "beforeWhitespace" | "never";
+  autoSurround: "languageDefined" | "quotes" | "brackets" | "never";
+  formatOnSave: boolean;
+  formatOnPaste: boolean;
+  formatOnType: boolean;
+  trimTrailingWhitespace: boolean;
+  insertFinalNewline: boolean;
+  trimFinalNewlines: boolean;
+  /** Line ending for new/empty files; existing files keep theirs. */
+  eol: "auto" | "lf" | "crlf";
+  multiCursorModifier: "alt" | "ctrlCmd";
+  dragAndDrop: boolean;
+  links: boolean;
+  occurrencesHighlight: boolean;
+  selectionHighlight: boolean;
+  unicodeHighlightAmbiguous: boolean;
+  unicodeHighlightInvisible: boolean;
+  scrollBeyondLastLine: boolean;
+  cursorSurroundingLines: number;
+  // Files & explorer
+  autoSaveMode: "afterDelay" | "onFocusChange" | "onWindowChange";
+  autoSaveDelay: number;
+  confirmDelete: boolean;
+  explorerSortOrder: "default" | "mixed" | "filesFirst" | "type";
+  /** Glob patterns hidden from the explorer. */
+  filesExclude: string[];
+  /** Glob patterns whose file-change events are ignored. */
+  watcherExclude: string[];
+  // Workbench & layout
+  sidebarPosition: "left" | "right";
+  activityBarVisible: boolean;
+  statusBarVisible: boolean;
+  tabPreview: boolean;
+  tabCloseButton: "right" | "left" | "off";
+  wrapTabs: boolean;
+  breadcrumbs: boolean;
+  restoreTabs: boolean;
+  startupPage: "welcome" | "none" | "lastFolder";
+  compactDensity: boolean;
+  commandCenter: boolean;
+  // Terminal
+  shellArgs: string[];
+  terminalFontFamily: string;
+  terminalFontSize: number;
+  terminalLineHeight: number;
+  terminalCursorStyle: "block" | "underline" | "bar";
+  terminalCursorBlink: boolean;
+  terminalScrollback: number;
+  terminalCopyOnSelect: boolean;
+  terminalRightClick: "menu" | "paste";
+  terminalConfirmKill: boolean;
+  /** Start folder for new terminals; empty = the open folder. Relative paths resolve against it. */
+  terminalCwd: string;
+  terminalBell: "none" | "visual" | "sound";
+  terminalEnv: Record<string, string>;
+  // Agent & AI
+  agentPlanModeDefault: boolean;
+  agentVerifyDefault: boolean;
+  /** Stop a run after this many tool calls (0 = the built-in limit). */
+  agentMaxTurns: number;
+  agentNotifyApproval: boolean;
+  agentNotifyDone: boolean;
+  agentNotifySystem: boolean;
+  agentAutoOpenChanges: boolean;
+  agentIncludeOpenFile: boolean;
+  inlineCompletionDebounce: number;
+  commitMessageStyle: "plain" | "conventional";
+  // Git
+  gitAutofetch: boolean;
+  gitAutofetchInterval: number;
+  gitConfirmSync: boolean;
+  /** Placeholders: {author} {ago} {date} {summary} {hash}. */
+  blameFormat: string;
+  gitSmartCommit: boolean;
+  gitDefaultBranch: string;
+  gitPostCommit: "none" | "push" | "sync";
+  // Notifications & sounds
+  toastDuration: number;
+  doNotDisturb: boolean;
+  soundEffects: boolean;
+  soundVolume: number;
+}
+
+/** Respect the OS "reduce motion" preference until the user chooses. */
+const prefersReducedMotion = () => {
+  try { return typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches; } catch { return false; }
+};
+
+export interface ExtensionOptions {
+  /** Language id → use the extension's TextMate grammar instead of Monaco's tokenizer. */
+  grammars: Record<string, boolean>;
+  autoUpdate: boolean;
+  /** Extension id → version installed on purpose (skipped by updates). */
+  pins: Record<string, string>;
+  /** Keymap extension whose bindings are applied, and what it changed (to undo it). */
+  keymap: { extId: string; label: string; applied: Record<string, string>; previous: Record<string, string | null> } | null;
 }
 
 export interface CustomProvider {
@@ -140,6 +288,7 @@ export const DEFAULT_SETTINGS: Settings = {
   trustedCertificates: [],
   telemetryLevel: "off",
   extensionRegistryUrl: "",
+  extensionOptions: { grammars: {}, autoUpdate: false, pins: {}, keymap: null },
   updateMode: "startup",
   lspWorkspaceDiagnostics: true,
   tsSemanticValidation: true,
@@ -147,7 +296,134 @@ export const DEFAULT_SETTINGS: Settings = {
   customProviders: [],
   hiddenModels: [],
   modelPick: "",
+
+  reduceMotion: prefersReducedMotion(),
+  cursorBlinking: "blink",
+  cursorSmoothCaretAnimation: "on",
+  cursorStyle: "line",
+  cursorWidth: 2,
+  smoothScrolling: true,
+  mouseWheelScrollSensitivity: 1,
+  fastScrollSensitivity: 5,
+  highContrastFocus: false,
+  uiFontScale: 1,
+  reducedTransparency: false,
+  fontWeight: "normal",
+  lineHeight: 0,
+  letterSpacing: 0,
+  fontLigatures: true,
+  insertSpaces: true,
+  detectIndentation: true,
+  wordWrapMode: "viewport",
+  wordWrapColumn: 80,
+  rulers: [],
+  renderWhitespace: "selection",
+  renderControlCharacters: true,
+  lineNumbers: "on",
+  renderLineHighlight: "line",
+  bracketPairColorization: true,
+  bracketPairGuides: true,
+  indentationGuides: true,
+  stickyScroll: true,
+  stickyScrollMaxLines: 5,
+  minimapSide: "right",
+  minimapSize: "proportional",
+  minimapRenderCharacters: true,
+  minimapShowSlider: "mouseover",
+  folding: true,
+  foldingStrategy: "auto",
+  glyphMargin: true,
+  codeLens: true,
+  inlayHints: "on",
+  hoverDelay: 300,
+  quickSuggestions: true,
+  quickSuggestionsDelay: 10,
+  acceptSuggestionOnEnter: "on",
+  suggestPreview: false,
+  snippetSuggestions: "inline",
+  parameterHints: true,
+  autoClosingBrackets: "languageDefined",
+  autoClosingQuotes: "languageDefined",
+  autoSurround: "languageDefined",
+  formatOnSave: false,
+  formatOnPaste: false,
+  formatOnType: false,
+  trimTrailingWhitespace: false,
+  insertFinalNewline: false,
+  trimFinalNewlines: false,
+  eol: "auto",
+  multiCursorModifier: "alt",
+  dragAndDrop: true,
+  links: true,
+  occurrencesHighlight: true,
+  selectionHighlight: true,
+  unicodeHighlightAmbiguous: true,
+  unicodeHighlightInvisible: true,
+  scrollBeyondLastLine: true,
+  cursorSurroundingLines: 0,
+  autoSaveMode: "afterDelay",
+  autoSaveDelay: 1000,
+  confirmDelete: true,
+  explorerSortOrder: "default",
+  filesExclude: ["**/.git", "**/.DS_Store", "**/Thumbs.db"],
+  watcherExclude: [],
+  sidebarPosition: "left",
+  activityBarVisible: true,
+  statusBarVisible: true,
+  tabPreview: false,
+  tabCloseButton: "right",
+  wrapTabs: false,
+  breadcrumbs: true,
+  restoreTabs: true,
+  startupPage: "welcome",
+  compactDensity: false,
+  commandCenter: true,
+  shellArgs: [],
+  terminalFontFamily: "",
+  terminalFontSize: 13,
+  terminalLineHeight: 1,
+  terminalCursorStyle: "block",
+  terminalCursorBlink: true,
+  terminalScrollback: 5000,
+  terminalCopyOnSelect: false,
+  terminalRightClick: "menu",
+  terminalConfirmKill: false,
+  terminalCwd: "",
+  terminalBell: "none",
+  terminalEnv: {},
+  agentPlanModeDefault: false,
+  agentVerifyDefault: false,
+  agentMaxTurns: 0,
+  agentNotifyApproval: true,
+  agentNotifyDone: true,
+  agentNotifySystem: true,
+  agentAutoOpenChanges: false,
+  agentIncludeOpenFile: true,
+  inlineCompletionDebounce: 600,
+  commitMessageStyle: "plain",
+  gitAutofetch: false,
+  gitAutofetchInterval: 180,
+  gitConfirmSync: false,
+  blameFormat: "{author}, {ago} • {summary}",
+  gitSmartCommit: true,
+  gitDefaultBranch: "",
+  gitPostCommit: "none",
+  toastDuration: 3.5,
+  doNotDisturb: false,
+  soundEffects: false,
+  soundVolume: 0.5,
 };
+
+/** Normalizes a stored value to the default's shape (wrong type → default). */
+function sameShape(raw: any, key: keyof Settings): any {
+  const def: any = DEFAULT_SETTINGS[key];
+  const v = raw?.[key];
+  if (v === undefined) return def;
+  if (Array.isArray(def)) return Array.isArray(v) ? v : def;
+  if (def && typeof def === "object") return v && typeof v === "object" && !Array.isArray(v) ? v : def;
+  return typeof v === typeof def ? v : def;
+}
+const SHAPED: (keyof Settings)[] = ["rulers", "filesExclude", "watcherExclude", "shellArgs", "terminalEnv"];
 
 export function mergeSettings(raw: any): Settings {
   if (!raw || typeof raw !== "object") return structuredClone(DEFAULT_SETTINGS);
@@ -160,6 +436,7 @@ export function mergeSettings(raw: any): Settings {
     recent: Array.isArray(raw.recent) ? raw.recent : [],
     customThemes: Array.isArray(raw.customThemes) ? raw.customThemes : [],
     disabledExtensions: Array.isArray(raw.disabledExtensions) ? raw.disabledExtensions : [],
+    extensionOptions: { ...DEFAULT_SETTINGS.extensionOptions, ...(raw.extensionOptions && typeof raw.extensionOptions === "object" ? raw.extensionOptions : {}) },
     sshHosts: Array.isArray(raw.sshHosts) ? raw.sshHosts : [],
     keybindings: raw.keybindings && typeof raw.keybindings === "object" ? raw.keybindings : {},
     languageServers: raw.languageServers && typeof raw.languageServers === "object" ? raw.languageServers : {},
@@ -172,6 +449,7 @@ export function mergeSettings(raw: any): Settings {
     telemetryLevel: "off",
     updateMode: ["automatic", "startup", "manual", "none"].includes(raw.updateMode) ? raw.updateMode : "startup",
     uiZoom: typeof raw.uiZoom === "number" && raw.uiZoom >= 0.5 && raw.uiZoom <= 2 ? raw.uiZoom : 1,
+    ...Object.fromEntries(SHAPED.map((k) => [k, sameShape(raw, k)])),
   };
   // Nobody configured a paid provider yet: start on the free NVIDIA models.
   if (s.provider !== "nvidia" && s.provider !== "openai" && !s.keys[s.provider]) s.provider = "nvidia";

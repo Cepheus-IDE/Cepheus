@@ -11,6 +11,10 @@ import TestResults from "./TestResults";
 import { detectProfiles, DONE_RE, RUN_EVENT, RunRequest, TermProfile, wrapForPowerShell } from "../lib/terminalBus";
 import { findLinks, resolveAgainst } from "../lib/termLinks";
 import { terminalShell } from "../lib/continuity";
+import { buildTerminalOptions } from "../lib/editorOptions";
+import { terminalLaunch } from "../lib/terminalLaunch";
+import { playSound } from "../lib/sounds";
+import { confirmDialog } from "./ConfirmDialog";
 
 /** One shell. `run` = a command typed once the shell is up, with an exit-code callback. */
 interface Pane { key: number; profile?: TermProfile; run?: RunRequest }
@@ -56,7 +60,10 @@ export default function TerminalPanel() {
       return { ...g, panes: [...g.panes, { key, profile }], activePane: key };
     }));
   };
-  const closeGroup = (id: number) => {
+  /** Settings › Terminal › Confirm before killing. */
+  const confirmKill = async () => !get().settings.terminalConfirmKill || confirmDialog({ title: "Kill this terminal?", message: "The running process will be ended.", confirmLabel: "Kill", danger: true });
+  const closeGroup = async (id: number, ask = true) => {
+    if (ask && !(await confirmKill())) return;
     setGroups((gs) => {
       const next = gs.filter((x) => x.id !== id);
       if (activeRef.current === id) setActive(next[next.length - 1]?.id ?? null);
@@ -65,10 +72,10 @@ export default function TerminalPanel() {
     });
   };
   /** Kill the focused pane; the tab goes away with its last pane. */
-  const killActive = () => {
+  const killActive = async () => {
     const g = groups.find((x) => x.id === active);
-    if (!g) return;
-    if (g.panes.length <= 1) return closeGroup(g.id);
+    if (!g || !(await confirmKill())) return;
+    if (g.panes.length <= 1) return closeGroup(g.id, false);
     setGroups((gs) => gs.map((x) => {
       if (x.id !== g.id) return x;
       const panes = x.panes.filter((p) => p.key !== x.activePane);
@@ -213,6 +220,59 @@ export default function TerminalPanel() {
 }
 
 /** Ctrl+click file links: existence is checked (and cached briefly) before a link is shown. */
+// ---------- Settings › Terminal wiring ----------
+
+let winDefaultShell: Promise<string> | null = null;
+/** Start folder, shell, args and environment variables for a new local terminal. */
+async function launchSpec(cwd: string | null, shell: string | undefined, args: string[] | undefined, special: boolean) {
+  const s = get().settings;
+  const remote = !!cwd?.startsWith("ssh://");
+  let dir = cwd;
+  const custom = s.terminalCwd?.trim();
+  if (custom && !remote && !special) dir = /^([a-zA-Z]:[\\/]|[\\/]|~)/.test(custom) || !cwd ? custom : `${cwd.replace(/[\\/]$/, "")}/${custom}`;
+  // A profile brings its own shell/args; otherwise the configured shell and its arguments.
+  const sh = shell ?? (s.shell || undefined);
+  const shArgs = shell ? args : s.shellArgs?.length ? s.shellArgs : undefined;
+  if (special || remote || !Object.keys(s.terminalEnv ?? {}).length) return { cwd: dir, shell: sh, args: shArgs };
+  if (IS_WINDOWS && !sh) winDefaultShell ??= api.which(["pwsh.exe"]).then((f) => (f.length ? "pwsh.exe" : "powershell.exe")).catch(() => "powershell.exe");
+  const l = terminalLaunch(sh, shArgs, s.terminalEnv, IS_WINDOWS, IS_WINDOWS && !sh ? await winDefaultShell! : undefined);
+  return { cwd: dir, shell: l.shell, args: l.args };
+}
+
+/** Live options, copy on select, right-click behaviour and bell. Returns a cleanup. */
+function wireTerminalSettings(term: Terminal, host: HTMLElement, ptyId: () => number | null) {
+  let prev = get().settings;
+  const unsub = useStore.subscribe((st) => {
+    if (st.settings === prev) return;
+    prev = st.settings;
+    const o = buildTerminalOptions(st.settings);
+    for (const [k, v] of Object.entries(o)) if ((term.options as any)[k] !== v) (term.options as any)[k] = v;
+  });
+  const sel = term.onSelectionChange(() => {
+    if (get().settings.terminalCopyOnSelect && term.hasSelection()) navigator.clipboard.writeText(term.getSelection()).catch(() => {});
+  });
+  const onCtx = (e: MouseEvent) => {
+    if (get().settings.terminalRightClick !== "paste") return;
+    e.preventDefault();
+    if (term.hasSelection()) {
+      navigator.clipboard.writeText(term.getSelection()).catch(() => {});
+      term.clearSelection();
+    } else {
+      navigator.clipboard.readText().then((t) => { const id = ptyId(); if (id && t) api.termWrite(id, t); }).catch(() => {});
+    }
+  };
+  host.addEventListener("contextmenu", onCtx);
+  const bell = term.onBell(() => {
+    const mode = get().settings.terminalBell;
+    if (mode === "sound") playSound("bell", true);
+    if (mode === "visual") {
+      host.classList.add("term-bell");
+      setTimeout(() => host.classList.remove("term-bell"), 180);
+    }
+  });
+  return () => { unsub(); sel.dispose(); bell.dispose(); host.removeEventListener("contextmenu", onCtx); };
+}
+
 const existsCache = new Map<string, { at: number; ok: Promise<boolean> }>();
 function exists(path: string) {
   const hit = existsCache.get(path);
@@ -230,14 +290,11 @@ function TermView({ visible, focused, cwd, shell, args, run }: { visible: boolea
 
   useEffect(() => {
     const term = new Terminal({
-      fontFamily: "'Cascadia Mono', 'Cascadia Code', Consolas, monospace",
-      fontSize: 13,
-      cursorBlink: true,
       allowProposedApi: true,
-      scrollback: 5000,
       theme: terminalTheme(),
-      screenReaderMode: get().settings.accessibilitySupport === "on",
+      ...buildTerminalOptions(get().settings), // Settings › Terminal (src/lib/editorOptions.ts)
     });
+    const settingsCleanup = wireTerminalSettings(term, host.current!, () => idRef.current);
     const fit = new FitAddon();
     term.loadAddon(fit);
     term.open(host.current!);
@@ -292,8 +349,8 @@ function TermView({ visible, focused, cwd, shell, args, run }: { visible: boolea
 
     // "Reopen in Container": docker exec -it … inside the dev container (not for host installs).
     const dc = run ? null : terminalShell();
-    api
-      .termSpawn(cwd, term.cols, term.rows, dc?.shell ?? shell ?? get().settings.shell, dc ? dc.args : args)
+    launchSpec(cwd, shell, args, !!dc || !!run)
+      .then((l) => api.termSpawn(l.cwd, term.cols, term.rows, dc?.shell ?? l.shell, dc ? dc.args : l.args))
       .then((id) => {
         if (disposed) {
           api.termKill(id);
@@ -345,6 +402,7 @@ function TermView({ visible, focused, cwd, shell, args, run }: { visible: boolea
       disposed = true;
       ro.disconnect();
       linkSub.dispose();
+      settingsCleanup();
       unlisteners.forEach((p) => p.then((f) => f()));
       if (idRef.current) api.termKill(idRef.current);
       term.dispose();

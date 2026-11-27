@@ -10,6 +10,8 @@ const MODIFIERS = ["Control", "Shift", "Alt", "Meta"];
 export default function KeybindingsModal() {
   const open = useStore((s) => s.keybindingsOpen);
   const overrides = useStore((s) => s.settings.keybindings);
+  // Overrides that came from an installed keymap extension are labelled with its name.
+  const keymap = useStore((s) => s.settings.extensionOptions?.keymap ?? null);
   const [q, setQ] = useState("");
   const [recording, setRecording] = useState<string | null>(null);
 
@@ -92,7 +94,7 @@ export default function KeybindingsModal() {
                   ) : (
                     <span className="muted">—</span>
                   )}
-                  {custom && recording !== c.id && <span className="kb-badge">User</span>}
+                  {custom && recording !== c.id && <span className="kb-badge">{keymap && c.id in keymap.applied && keymap.applied[c.id] === overrides[c.id] ? `Keymap: ${keymap.label}` : "User"}</span>}
                   {clash.length > 0 && recording !== c.id && (
                     <span className="kb-clash" title={`Also bound to: ${clash.join(", ")}`}><i className="codicon codicon-warning" /> conflict</span>
                   )}

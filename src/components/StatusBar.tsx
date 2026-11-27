@@ -4,6 +4,7 @@ import { ProfileStatus } from "./ProfilesModal";
 import LspInstallButton from "./LspInstallButton";
 import { openBranchPicker } from "./BranchPicker";
 import { aheadBehind, syncNow } from "../lib/gitApi";
+import { PresentToggle } from "./ToolboxOverlay";
 
 export default function StatusBar() {
   const git = useStore((s) => s.git);
@@ -48,6 +49,7 @@ export default function StatusBar() {
         </button>
       )}
       <div className="spacer" />
+      <PresentToggle />
       <ProfileStatus />
       {hasFile && (
         <>

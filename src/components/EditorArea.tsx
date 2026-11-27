@@ -13,8 +13,8 @@ import { attachDebugGutter } from "../lib/debugger";
 import BrowserTab from "./BrowserTab";
 import MergeEditor from "./MergeEditor";
 import PullRequestView from "./PullRequestView";
-
-const DEFAULT_FONT = "'JetBrains Mono', 'Cascadia Code', Consolas, monospace";
+import { buildDiffOptions, buildEditorOptions } from "../lib/editorOptions";
+import { pinTab, usePreviewTab } from "../lib/tabPreview";
 
 export default function EditorArea() {
   const tabs = useStore((s) => s.tabs);
@@ -24,6 +24,7 @@ export default function EditorArea() {
   const settings = useStore((s) => s.settings);
   const pendingReveal = useStore((s) => s.pendingReveal);
   const timeMachine = useStore((s) => s.timeMachine);
+  const previewId = usePreviewTab((s) => s.id);
   const hostRef = useRef<HTMLDivElement>(null);
   const diffHostRef = useRef<HTMLDivElement>(null);
   const diffRef = useRef<monaco.editor.IStandaloneDiffEditor | null>(null);
@@ -35,16 +36,9 @@ export default function EditorArea() {
     const ed = monaco.editor.create(hostRef.current!, {
       model: null,
       automaticLayout: true,
-      fontFamily: get().settings.fontFamily || DEFAULT_FONT,
-      fontLigatures: true,
-      smoothScrolling: true,
-      cursorSmoothCaretAnimation: "on",
-      bracketPairColorization: { enabled: true },
-      guides: { bracketPairs: true },
       inlineSuggest: { enabled: true },
-      stickyScroll: { enabled: true },
-      renderWhitespace: "selection",
       padding: { top: 8 },
+      ...buildEditorOptions(get().settings), // Settings › Editor / Motion (src/lib/editorOptions.ts)
     });
     editorRef.current = ed;
     const detachGit = attachGitExtras(ed);
@@ -73,13 +67,8 @@ export default function EditorArea() {
 
   // Apply settings.
   useEffect(() => {
-    editorRef.current?.updateOptions({
-      fontSize: settings.fontSize,
-      fontFamily: settings.fontFamily || DEFAULT_FONT,
-      wordWrap: settings.wordWrap ? "on" : "off",
-      minimap: { enabled: settings.minimap },
-    });
-    diffRef.current?.updateOptions({ fontSize: settings.fontSize });
+    editorRef.current?.updateOptions(buildEditorOptions(settings));
+    diffRef.current?.updateOptions(buildDiffOptions(settings));
   }, [settings]);
 
   // Switch model when the active tab changes.
@@ -126,8 +115,8 @@ export default function EditorArea() {
         automaticLayout: true,
         readOnly: true,
         renderSideBySide: true,
-        fontSize: get().settings.fontSize,
         originalEditable: false,
+        ...buildDiffOptions(get().settings),
       });
     }
     const lang = languageForPath(active.path);
@@ -151,7 +140,8 @@ export default function EditorArea() {
             return (
               <div
                 key={t.id}
-                className={`tab ${t.id === activeId ? "active" : ""} ${dirty[t.path] && t.kind === "file" ? "dirty" : ""}`}
+                className={`tab ${t.id === activeId ? "active" : ""} ${dirty[t.path] && t.kind === "file" ? "dirty" : ""} ${t.id === previewId ? "preview" : ""}`}
+                onDoubleClick={() => pinTab(t.id)}
                 onClick={() => set({ activeId: t.id })}
                 onMouseDown={(e) => e.button === 1 && closeTab(t.id)}
                 title={t.path}
@@ -190,7 +180,7 @@ export default function EditorArea() {
       <div className="editor-host" ref={diffHostRef} style={{ display: active?.kind === "diff" ? "block" : "none" }} />
       {/* Browser tabs stay mounted so their native webviews keep page state across tab switches. */}
       {tabs.filter((t) => t.kind === "browser").map((t) => <BrowserTab key={t.id} tab={t} visible={t.id === activeId} />)}
-      {!active && <Welcome hasWorkspace={!!ws} />}
+      {!active && settings.startupPage !== "none" && <Welcome hasWorkspace={!!ws} />}
     </div>
   );
 }

@@ -28,7 +28,7 @@ export function registerInlineCompletion() {
       const s = get().settings;
       if (!s.inlineCompletion) return { items: [] };
       // Debounce: wait for the user to pause typing.
-      await new Promise((r) => setTimeout(r, 600));
+      await new Promise((r) => setTimeout(r, s.inlineCompletionDebounce ?? 600)); // Settings › Agent › Completion delay
       if (token.isCancellationRequested) return { items: [] };
       const full = model.getFullModelRange();
       const prefix = model.getValueInRange(new monaco.Range(Math.max(1, position.lineNumber - 80), 1, position.lineNumber, position.column));
@@ -95,7 +95,8 @@ export async function generateCommitMessage(): Promise<string> {
   const s = get().settings;
   const out = await api.aiOneshot(
     providerConfig(s, undefined, "low"),
-    "You write git commit messages. Output only the commit message: a concise imperative subject line (max 72 chars), then optionally a blank line and a short bullet list of key changes. No markdown fences.",
+    "You write git commit messages. Output only the commit message: a concise imperative subject line (max 72 chars), then optionally a blank line and a short bullet list of key changes. No markdown fences." +
+      (s.commitMessageStyle === "conventional" ? " Use the Conventional Commits format for the subject: type(optional scope): description, with type one of feat, fix, docs, style, refactor, perf, test, build, ci, chore." : ""),
     `Diff:\n${diff.slice(0, 60000)}`,
     4000
   );

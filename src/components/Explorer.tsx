@@ -7,12 +7,16 @@ import ContextMenu, { MenuItem } from "./ContextMenu";
 import FileIcon from "./FileIcon";
 import { hidesArrows, iconThemeActive } from "../lib/iconTheme";
 import { ensureSession, sendMessage } from "../lib/agent";
+import { arrangeEntries } from "../lib/explorerOptions";
+import { confirmDialog } from "./ConfirmDialog";
 
 type Pending = { kind: "file" | "folder" | "rename"; dir: string; target?: string } | null;
 
 export default function Explorer() {
   const ws = useStore((s) => s.workspace);
   const recent = useStore((s) => s.settings.recent);
+  const filesExclude = useStore((s) => s.settings.filesExclude);
+  const explorerSortOrder = useStore((s) => s.settings.explorerSortOrder);
   const treeVersion = useStore((s) => s.treeVersion);
   const git = useStore((s) => s.git);
   useStore((s) => s.iconThemeVersion);
@@ -106,6 +110,7 @@ export default function Explorer() {
   };
 
   const del = async (entry: DirEntry) => {
+    if (get().settings.confirmDelete !== false && !(await confirmDialog({ title: `Delete “${entry.name}”?`, message: entry.isDir ? "The folder and its contents will be moved to the trash." : "The file will be moved to the trash.", confirmLabel: "Delete", danger: true }))) return;
     try {
       await api.remove(entry.path);
       for (const t of get().tabs) if (t.path.toLowerCase().startsWith(entry.path.toLowerCase())) await closeTab(t.id, true);
@@ -186,7 +191,7 @@ export default function Explorer() {
   );
 
   const renderDir = (dir: string, depth: number): JSX.Element[] => {
-    const list = children[dir];
+    const list = children[dir] && arrangeEntries([...children[dir]], ws, { filesExclude, explorerSortOrder }); // Settings › Files & Explorer
     if (!list) return [];
     const rows: JSX.Element[] = [];
     if (pending && pending.kind !== "rename" && samePath(pending.dir, dir)) rows.push(<div key="__pending">{renderInput(depth)}</div>);

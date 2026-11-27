@@ -91,8 +91,7 @@ export default function Appearance({ onChange }: { onChange: (patch: Partial<Set
   ];
 
   return (
-    <section>
-      <h3>Appearance</h3>
+    <section className="appearance-block">
       {groups.map(([label, list]) =>
         list.length ? (
           <div key={label}>
@@ -182,15 +181,7 @@ export default function Appearance({ onChange }: { onChange: (patch: Partial<Set
             )}
           </select>
         </div>
-        <div />
-        <div>
-          <label>Editor font</label>
-          <input placeholder="'JetBrains Mono', Consolas" value={settings.fontFamily} onChange={(e) => apply({ fontFamily: e.target.value })} />
-        </div>
-        <div>
-          <label>Font size</label>
-          <input type="number" min={9} max={32} value={settings.fontSize} onChange={(e) => apply({ fontSize: Number(e.target.value) || 14 })} />
-        </div>
+        <div className="muted small appearance-hint">Fonts live under Editor Text and Terminal; motion and contrast under Motion &amp; Accessibility.</div>
       </div>
     </section>
   );

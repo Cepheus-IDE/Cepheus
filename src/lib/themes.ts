@@ -179,7 +179,9 @@ export function resolveCustom(t: CustomTheme): Resolved {
   };
 }
 
-export const isHighContrast = (id: string) => id.startsWith("builtin:hc-");
+/** Extension themes contributed with `uiTheme: hc-black / hc-light` (filled by setExtensionThemes). */
+const hcExtThemes = new Set<string>();
+export const isHighContrast = (id: string) => id.startsWith("builtin:hc-") || hcExtThemes.has(id);
 
 /** Monaco high-contrast extras: visible borders around widgets, selections and the focused element. */
 function hcChrome(ui: UiVars): Record<string, string> {
@@ -292,7 +294,7 @@ export function convertVsTheme(src: { colors: Record<string, string>; tokenColor
   if (tb) ansi.background = tb;
   return {
     ui,
-    monaco: { base: kind === "dark" ? (uiTheme === "hc-black" ? "hc-black" : "vs-dark") : "vs", inherit: true, rules, colors },
+    monaco: { base: kind === "dark" ? (uiTheme === "hc-black" ? "hc-black" : "vs-dark") : uiTheme === "hc-light" ? "hc-light" : "vs", inherit: true, rules, colors },
     terminal: terminalFor(ui, ansi),
   };
 }
@@ -314,8 +316,10 @@ export function customEntry(t: CustomTheme, source: "builtin" | "custom"): Theme
 
 export async function setExtensionThemes(list: { extId: string; label: string; uiTheme: string; path: string }[]) {
   const entries: ThemeEntry[] = [];
+  hcExtThemes.clear();
   for (const t of list) {
     const id = `ext:${t.extId}:${t.label}`;
+    if (t.uiTheme.startsWith("hc-")) hcExtThemes.add(id);
     try {
       const src = await loadVsTheme(t.path);
       const r = convertVsTheme(src, t.uiTheme);

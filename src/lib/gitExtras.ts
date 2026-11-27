@@ -2,6 +2,7 @@ import { monaco } from "./monaco";
 import { api } from "./api";
 import { get } from "../store";
 import { attachQuickDiff, clearQuickDiffCache } from "./quickDiff";
+import { formatBlame } from "./editorOptions";
 
 // ----------------------------------------------------------------------------------------------
 // Inline blame: "Author, 3 days ago • summary" after the cursor's line, like GitLens.
@@ -55,7 +56,7 @@ function attachBlame(ed: monaco.editor.IStandaloneCodeEditor) {
       if (!b) return;
       const text = /^0+$/.test(b.hash)
         ? "You, uncommitted changes"
-        : `${b.author}, ${timeAgo(b.time)} • ${b.summary}`;
+        : formatBlame(st.settings.blameFormat, b, timeAgo(b.time)); // Settings › Git › Blame format
       const col = model.getLineMaxColumn(pos.lineNumber);
       deco.set([{
         range: new monaco.Range(pos.lineNumber, col, pos.lineNumber, col),

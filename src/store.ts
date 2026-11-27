@@ -20,7 +20,7 @@ export interface Tab {
 export interface Problem { path: string; line: number; col: number; endLine: number; endCol: number; severity: "error" | "warning" | "info"; message: string; source: string }
 export type PanelTab = "terminal" | "problems" | "debug" | "tests";
 
-export type SidebarView = "explorer" | "search" | "git" | "debug" | "testing" | "github" | "remote" | "extensions" | "agents";
+export type SidebarView = "explorer" | "search" | "git" | "debug" | "testing" | "github" | "remote" | "extensions" | "agents" | "skills" | "apple" | "toolbox";
 
 export type ChatItem =
   | { kind: "user"; text: string; /** steering message waiting for the next model turn */ queued?: boolean }
@@ -138,9 +138,13 @@ export const get = useStore.getState;
 
 let toastId = 0;
 export function toast(text: string, kind: "info" | "error" = "info") {
+  // Settings › Notifications: do not disturb hides info toasts; duration in seconds (errors ×2).
+  const cfg = get().settings;
+  if (kind === "info" && cfg.doNotDisturb) return;
   const id = ++toastId;
   set((s) => ({ toasts: [...s.toasts, { id, text, kind }] }));
-  setTimeout(() => set((s) => ({ toasts: s.toasts.filter((t) => t.id !== id) })), kind === "error" ? 7000 : 3500);
+  const secs = Math.max(1, cfg.toastDuration ?? 3.5);
+  setTimeout(() => set((s) => ({ toasts: s.toasts.filter((t) => t.id !== id) })), (kind === "error" ? secs * 2 : secs) * 1000);
 }
 
 export function updateSession(id: string, fn: (s: AgentSession) => AgentSession) {

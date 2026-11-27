@@ -152,7 +152,13 @@ export { monaco };
 export function languageForPath(path: string): string {
   const uri = monaco.Uri.file(path);
   const ext = "." + (path.split(".").pop() ?? "").toLowerCase();
-  const lang = monaco.languages.getLanguages().find((l) => l.extensions?.includes(ext));
+  const langs = monaco.languages.getLanguages();
+  // Exact file names and multi-dot extensions (".blade.php") from extension `contributes.languages`.
+  const base = (path.split(/[\\/]/).pop() ?? "").toLowerCase();
+  const named = langs.find((l) => l.filenames?.some((f) => f.toLowerCase() === base))
+    ?? langs.find((l) => l.extensions?.some((e) => e.split(".").length > 2 && base.endsWith(e.toLowerCase())));
+  if (named) return named.id;
+  const lang = langs.find((l) => l.extensions?.includes(ext));
   if (lang) return lang.id;
   const lower = path.toLowerCase();
   if (lower.endsWith("dockerfile")) return "dockerfile";
