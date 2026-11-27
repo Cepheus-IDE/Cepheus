@@ -214,4 +214,20 @@
     }, { rootMargin: "-25% 0px -65% 0px" });
     document.querySelectorAll(".doc section").forEach(function (s) { tio.observe(s); });
   }
+
+  // ---------- Copy buttons ----------
+  document.querySelectorAll("[data-copy]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      var text = b.getAttribute("data-copy");
+      var done = function () { var t = b.textContent; b.textContent = "Copied"; setTimeout(function () { b.textContent = t; }, 1600); };
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, function () { selectText(b); });
+      else selectText(b);
+    });
+  });
+  function selectText(b) {
+    var code = b.parentElement && b.parentElement.querySelector("code");
+    if (!code) return;
+    var r = document.createRange(); r.selectNodeContents(code);
+    var sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(r);
+  }
 })();

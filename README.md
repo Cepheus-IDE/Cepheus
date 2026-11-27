@@ -162,6 +162,33 @@ The agent starts on the free NVIDIA models. Install [Git](https://git-scm.com) t
 | **Profiles and Settings Sync** | Bundle settings, shortcuts, extensions, snippets and layout; sync through a private GitHub Gist. |
 | **Zoom** | <kbd>Ctrl</kbd>+<kbd>=</kbd> / <kbd>Ctrl</kbd>+<kbd>-</kbd> / <kbd>Ctrl</kbd>+<kbd>0</kbd>. |
 
+### 🗄 Database
+
+A database client built into the editor, for **PostgreSQL, MySQL, MariaDB, SQLite and SQL Server**.
+
+| Feature | What it does |
+|---|---|
+| **Connections** | Direct or through an SSH tunnel; passwords in the system keychain; color tags; production connections are read-only until you confirm. |
+| **Explorer and SQL editor** | Databases, schemas, tables, views and functions; schema-aware autocomplete; run all or a selection; EXPLAIN; history; multiple result sets. |
+| **Data grid** | Paging, sorting, filters, inline edits saved in one transaction with the SQL shown first; export to CSV, JSON or SQL; CSV import. |
+| **Table designer and ER diagram** | Design columns, indexes and foreign keys with a DDL preview; see every relationship on a draggable ER diagram. |
+| **Agent** | Ask it to design a schema ("tables for a blog with users, posts and comments"); it shows the DDL and runs it after you approve. |
+| **Safety** | `DROP`, `TRUNCATE` and `DELETE`/`UPDATE` without `WHERE` always need a typed confirmation. |
+
+### 🐳 Docker
+
+Containers, compose projects, images, volumes and networks in one view: start, stop and restart, live logs, a shell inside a container, stats, image pull/build/run, and cleanup with clear confirmations. Works with Docker Desktop, Docker Engine or Podman.
+
+### 🧩 Extension bridges
+
+Extensions from Open VSX that would need VS Code's extension host are connected to real features instead:
+
+- **Claude Code** and **Codex** become the agent in the chat panel.
+- **Formatters** (Prettier, Black, Ruff, rustfmt, gofmt, clang-format, shfmt and more) and **linters** (ESLint, Ruff, Stylelint, ShellCheck, markdownlint, Hadolint) run through their command-line tools.
+- **Language servers** bundled with YAML, Prisma, GraphQL, Svelte, Astro and Tailwind CSS extensions run as real servers.
+- **EditorConfig**, inline error messages, path completion and auto-rename of HTML tags are built in.
+- Extensions whose features Cepheus already has (GitLens, Live Server, Docker, Python, Remote SSH…) point you to them.
+
 ### 🧰 Toolbox
 
 Small tools that save time every day, in the **Toolbox** view and the **Tools** menu.
@@ -188,6 +215,21 @@ A **Skills** view with a gallery of 26 ready-made skills (tests, code review, se
 A system policy file (`%ProgramData%\Cepheus\policy.json`, `/Library/Application Support/Cepheus/policy.json` or `/etc/cepheus/policy.json`) can lock settings and limit providers, models, agent tools and MCP servers, set the minimum approval mode, add shared agent instructions, allow only approved extensions, and configure a proxy, trusted certificates and the update mode. See [the docs](landing/docs.html#teams).
 
 <br>
+
+## 💻 CLI and Web
+
+**CLI.** The same agent in your terminal, published on npm as [`cepheus-ide`](https://www.npmjs.com/package/cepheus-ide):
+
+```bash
+npm i -g cepheus-ide
+cepheus                       # interactive session in the current folder
+cepheus "fix the failing test" # one task, then exit
+cepheus web .                 # the full editor in your browser for this folder
+```
+
+It supports plan mode, approvals, AGENTS.md, skills, hooks and MCP servers, `/undo` and `/diff`, and `--json` output for scripts. See [cli/README.md](cli/README.md).
+
+**Web.** Open **[cepheus.codes/app](https://cepheus.codes/app/)** in Chrome or Edge to work on a local folder in the browser (editor, search and agent; no terminal). For everything including terminals, Git and language servers, run `cepheus web` on your machine or server and open the printed address.
 
 ## 🧠 AI models
 

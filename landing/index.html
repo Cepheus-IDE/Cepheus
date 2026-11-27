@@ -284,6 +284,64 @@
     </div>
   </section>
 
+  <!-- ================= DATABASE ================= -->
+  <section class="section" id="database">
+    <div class="os-grid">
+      <div>
+        <p class="eyebrow reveal-up">Database</p>
+        <h2 class="reveal-up">Your database, inside your editor<span class="dot">.</span></h2>
+        <p class="sub reveal-up">Connect to PostgreSQL, MySQL, MariaDB, SQLite or SQL Server. Browse tables, edit rows, design schemas and see every relationship on an ER diagram. Ask the agent to build the schema for you, and approve the SQL before it runs.</p>
+        <ul class="checks">
+          <li class="reveal-up">SQL editor with autocomplete from your real schema</li>
+          <li class="reveal-up">Editable data grid, table designer, import and export</li>
+          <li class="reveal-up">SSH tunnels, and passwords kept in your system keychain</li>
+          <li class="red reveal-up">Production connections are read-only until you confirm</li>
+        </ul>
+      </div>
+      <div class="reveal">
+        <div class="er" aria-label="Illustration: an ER diagram the agent created for a blog">
+          <div class="er-ask"><span class="er-k">You</span> Create tables for a blog with users, posts and comments</div>
+          <svg viewBox="0 0 460 250" role="img" aria-label="Users, posts and comments tables linked by foreign keys">
+            <path class="er-line" d="M150 70 C 190 70, 190 70, 220 70"/>
+            <path class="er-line l2" d="M330 95 C 360 95, 360 180, 330 185"/>
+            <path class="er-line l3" d="M95 120 C 95 190, 150 200, 220 200"/>
+            <g class="er-t"><rect x="10" y="20" width="140" height="100" rx="12"/><text class="er-h" x="24" y="44">users</text><text x="24" y="68">PK  id</text><text x="24" y="86">email</text><text x="24" y="104">name</text></g>
+            <g class="er-t t2"><rect x="220" y="20" width="120" height="100" rx="12"/><text class="er-h" x="234" y="44">posts</text><text x="234" y="68">PK  id</text><text x="234" y="86">user_id →</text><text x="234" y="104">title</text></g>
+            <g class="er-t t3"><rect x="220" y="150" width="120" height="90" rx="12"/><text class="er-h" x="234" y="174">comments</text><text x="234" y="196">post_id →</text><text x="234" y="214">user_id →</text></g>
+          </svg>
+          <div class="er-ok"><b>Approved</b> · CREATE TABLE ×3 · 4 foreign keys · 4 indexes</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= EVERYWHERE ================= -->
+  <section class="section dark" id="everywhere">
+    <p class="eyebrow reveal-up">Desktop, terminal or browser</p>
+    <h2 class="reveal-up">Code with Cepheus wherever you are<span class="dot">.</span></h2>
+    <p class="sub reveal-up muted-dark">The same agent, the same skills and the same free models, in three places.</p>
+    <div class="ev3">
+      <article class="evc reveal-up">
+        <span class="ev-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg></span>
+        <h3>Desktop app</h3>
+        <p>The full editor for Windows, macOS and Linux, with the terminal, debugger, Git, Docker and database tools.</p>
+        <a class="btn btn-light" href="#download">Download <span class="chev" aria-hidden="true">&gt;&gt;</span></a>
+      </article>
+      <article class="evc reveal-up">
+        <span class="ev-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m5 8 4 4-4 4M12 16h7"/></svg></span>
+        <h3>CLI</h3>
+        <p>A coding agent in your terminal. Plans, edits, runs commands and checks its work, with the same approvals.</p>
+        <div class="cmd"><code>npm i -g cepheus-ide</code><button type="button" class="copy" data-copy="npm i -g cepheus-ide" aria-label="Copy install command">Copy</button></div>
+      </article>
+      <article class="evc reveal-up">
+        <span class="ev-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.5 3 14 0 18M12 3c-3 3.5-3 14 0 18"/></svg></span>
+        <h3>Web</h3>
+        <p>Open Cepheus in Chrome or Edge and work on a local folder, or run <code class="i">cepheus web</code> for the full editor in any browser.</p>
+        <a class="btn btn-light" href="/app/">Open Cepheus Web <span class="chev" aria-hidden="true">&gt;&gt;</span></a>
+      </article>
+    </div>
+  </section>
+
   <!-- ================= APPLE ================= -->
   <section class="section dark" id="apple">
     <div class="rust-grid">
@@ -408,7 +466,7 @@
         <span class="cap"><em>◆</em>Language servers</span><span class="cap"><em>◆</em>Quick fixes</span><span class="cap"><em>◆</em>Refactors</span><span class="cap"><em>◆</em>Snippets</span><span class="cap"><em>◆</em>Split terminals</span><span class="cap"><em>◆</em>Debugger</span><span class="cap"><em>◆</em>launch.json</span><span class="cap"><em>◆</em>Test Explorer</span><span class="cap"><em>◆</em>Coverage</span><span class="cap"><em>◆</em>Time Machine</span><span class="cap"><em>◆</em>Port manager</span><span class="cap"><em>◆</em>.env manager</span><span class="cap"><em>◆</em>Disk sweeper</span><span class="cap"><em>◆</em>Dev utilities</span>
       </div></div>
       <div class="marquee" data-marquee><div class="marquee-track">
-        <span class="cap"><em>◆</em>Merge editor</span><span class="cap"><em>◆</em>Commit graph</span><span class="cap"><em>◆</em>Stage hunks</span><span class="cap"><em>◆</em>Pull requests</span><span class="cap"><em>◆</em>Browser preview</span><span class="cap"><em>◆</em>Remote SSH</span><span class="cap"><em>◆</em>Dev Containers</span><span class="cap"><em>◆</em>Profiles</span><span class="cap"><em>◆</em>Settings Sync</span><span class="cap"><em>◆</em>Team policy</span><span class="cap"><em>◆</em>TextMate grammars</span><span class="cap"><em>◆</em>Keymaps</span><span class="cap"><em>◆</em>Cloud Apple builds</span><span class="cap"><em>◆</em>Reduce motion</span>
+        <span class="cap"><em>◆</em>Merge editor</span><span class="cap"><em>◆</em>Commit graph</span><span class="cap"><em>◆</em>Stage hunks</span><span class="cap"><em>◆</em>Pull requests</span><span class="cap"><em>◆</em>Browser preview</span><span class="cap"><em>◆</em>Remote SSH</span><span class="cap"><em>◆</em>Dev Containers</span><span class="cap"><em>◆</em>Profiles</span><span class="cap"><em>◆</em>Settings Sync</span><span class="cap"><em>◆</em>Team policy</span><span class="cap"><em>◆</em>TextMate grammars</span><span class="cap"><em>◆</em>Keymaps</span><span class="cap"><em>◆</em>Cloud Apple builds</span><span class="cap"><em>◆</em>Database client</span><span class="cap"><em>◆</em>ER diagrams</span><span class="cap"><em>◆</em>Docker panel</span><span class="cap"><em>◆</em>CLI</span><span class="cap"><em>◆</em>Cepheus Web</span><span class="cap"><em>◆</em>Reduce motion</span>
       </div></div>
     </div>
   </section>
@@ -465,7 +523,9 @@
       <details class="reveal-up"><summary>Can I bring my VS Code themes and settings?<span class="pm"></span></summary><div class="ans"><div><p>Yes. Import settings, color themes and snippets from VS Code, Cursor, Windsurf or VSCodium, or install themes from Open VSX.</p></div></div></details>
       <details class="reveal-up"><summary>Can I run AI models locally?<span class="pm"></span></summary><div class="ans"><div><p>Yes. Point Cepheus at Ollama, LM Studio, llama.cpp, vLLM or any OpenAI-compatible server, on this computer or another machine on your network. The model runs in its own process, so Cepheus itself stays small. The model still needs memory of its own: roughly 5 GB for an 8B model and 40 GB for a 70B model when quantized. For very large models, run them on a strong server and connect Cepheus to it.</p></div></div></details>
       <details class="reveal-up"><summary>Can I build iPhone and Mac apps without a Mac?<span class="pm"></span></summary><div class="ans"><div><p>Yes, through the cloud. Cepheus runs your build on GitHub's macOS machines and downloads the result. Simulator builds and unsigned macOS apps work without an Apple account; installing on a real iPhone or publishing to TestFlight or the App Store needs an Apple Developer Program membership.</p></div></div></details>
-      <details class="reveal-up"><summary>Does it work with Docker?<span class="pm"></span></summary><div class="ans"><div><p>Yes. Open a project inside a Dev Container, run docker compose services from the Toolbox, and ask the agent to Dockerize a project with the built-in skill.</p></div></div></details>
+      <details class="reveal-up"><summary>Does it work with Docker?<span class="pm"></span></summary><div class="ans"><div><p>Yes. The Docker view lists containers, compose projects, images and volumes, with logs, shells, stats and cleanup. You can also open a project inside a Dev Container and ask the agent to Dockerize a project with the built-in skill.</p></div></div></details>
+      <details class="reveal-up"><summary>Is there a command-line version?<span class="pm"></span></summary><div class="ans"><div><p>Yes. Install it with <code class="i">npm i -g cepheus-ide</code> and run <code class="i">cepheus</code> in any folder. It works with the free models, local models or your own keys, and <code class="i">cepheus web</code> opens the full editor in your browser.</p></div></div></details>
+      <details class="reveal-up"><summary>Which databases can I connect to?<span class="pm"></span></summary><div class="ans"><div><p>PostgreSQL, MySQL, MariaDB, SQLite and SQL Server, directly or through an SSH tunnel. Passwords are stored in your system keychain, not in a settings file.</p></div></div></details>
       <details class="reveal-up"><summary>What happens if a free model is busy?<span class="pm"></span></summary><div class="ans"><div><p>With Auto selected, Cepheus retries the request on the next available model, and remembers models that are not available for your account.</p></div></div></details>
     </div>
   </section>
