@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Why Cepheus</title>
+<meta name="description" content="Why Cepheus: a small Rust core, free AI models, MIT open source, and your code stays on your machine.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="site.css">
+</head>
+<body>
+
+<nav class="nav" id="nav">
+  <a class="brand" href="index.html">
+    <svg width="18" height="18" viewBox="0 0 32 32" aria-hidden="true"><path d="M16 4 L27 12.5 L23.5 28 L8.5 28 L5 12.5 Z" fill="none" stroke="#121212" stroke-width="1.6" stroke-linejoin="round"/><circle cx="16" cy="4" r="2.8" fill="#e5352b"/><circle cx="27" cy="12.5" r="2" fill="#121212"/><circle cx="23.5" cy="28" r="2" fill="#121212"/><circle cx="8.5" cy="28" r="2" fill="#121212"/><circle cx="5" cy="12.5" r="2" fill="#121212"/></svg>
+    Cepheus
+  </a>
+  <div class="links">
+    <a href="index.html#features">Features</a>
+    <a href="why.html" aria-current="page">Why Cepheus</a>
+    <a href="docs.html">Docs</a>
+    <a href="index.html#models">Models</a>
+    <a href="index.html#faq">FAQ</a>
+  </div>
+  <a class="btn btn-dark" href="index.html#download">Download</a>
+</nav>
+
+<main>
+  <section class="page-hero">
+    <canvas class="silk" data-variant="page" aria-hidden="true"></canvas>
+    <p class="eyebrow">Why Cepheus</p>
+    <h1 class="page-title">A small app with a capable agent<span class="dot">.</span></h1>
+    <p class="lede">Cepheus is written in Rust, runs on the web engine Windows already has, and is open source under the MIT license. Start coding with AI for free, read every line of the code, and keep your projects on your own machine.</p>
+    <span class="scroll-cue" aria-hidden="true"></span>
+  </section>
+
+  <section class="section dark" id="rust">
+    <div class="rust-grid">
+      <div>
+        <p class="eyebrow reveal-up">Built in Rust</p>
+        <h2 class="reveal-up">Light where it counts<span class="dot">.</span></h2>
+        <p class="sub reveal-up muted-dark">Files, search, git, terminals, language servers and the AI agent run in a native Rust core built on Tauri. Cepheus does not ship its own copy of Chromium. The interface runs in Microsoft Edge WebView2, which is part of Windows 10 and 11.</p>
+        <div class="nums">
+          <div class="num reveal-up"><b><span data-count="10">10</span><small>MB</small></b><span>Private memory used by the Rust core</span><div class="bar"><i class="grow-line" style="width:12%"></i></div></div>
+          <div class="num reveal-up"><b><span data-count="9">9</span><small>MB</small></b><span>Size of the app program</span><div class="bar"><i class="grow-line" style="width:10%"></i></div></div>
+          <div class="num reveal-up"><b><span data-count="0">0</span></b><span>Browser engines bundled</span><div class="bar"><i style="width:0"></i></div></div>
+        </div>
+      </div>
+      <div class="flow reveal">
+        <svg viewBox="0 0 400 312" role="img" aria-label="Diagram: the Rust core talks to the WebView2 interface">
+          <path id="w1" class="wire" d="M200 96 C 200 150, 200 160, 200 214"/>
+          <path id="w2" class="wire" d="M90 254 C 20 254, 20 56, 90 56"/>
+          <g><rect class="box" x="90" y="16" width="220" height="80" rx="18"/><text class="lbl" x="200" y="52" text-anchor="middle">Rust core</text><text class="sm" x="200" y="74" text-anchor="middle">files · git · terminals · agent</text></g>
+          <g><rect class="box" x="90" y="214" width="220" height="80" rx="18"/><text class="lbl" x="200" y="250" text-anchor="middle">WebView2</text><text class="sm" x="200" y="272" text-anchor="middle">built into Windows</text></g>
+          <circle r="5" fill="#e5352b"><animateMotion dur="2.6s" repeatCount="indefinite"><mpath href="#w1"/></animateMotion></circle>
+          <circle r="5" fill="#ffffff"><animateMotion dur="2.6s" begin="1.3s" repeatCount="indefinite" keyPoints="1;0" keyTimes="0;1" calcMode="linear"><mpath href="#w1"/></animateMotion></circle>
+          <circle r="4" fill="#9a9a96"><animateMotion dur="5s" repeatCount="indefinite"><mpath href="#w2"/></animateMotion></circle>
+        </svg>
+      </div>
+    </div>
+    <p class="footnote">Measured on Windows 11 in November 2026. The Rust core (cepheus-ide.exe) used 10 MB of private memory and a 48 MB working set. The program file of the first 0.1.0 release build was 9.2 MB; newer builds with more features may be somewhat larger. The interface runs in WebView2 processes whose memory grows with the files, terminals and previews you open, as in any browser-based editor.</p>
+  </section>
+
+  <section class="section" id="free">
+    <div class="two">
+      <div class="prose">
+        <p class="eyebrow reveal-up">Free to start</p>
+        <h2 class="reveal-up">No account. No API key. No trial<span class="dot">.</span></h2>
+        <p class="reveal-up">Cepheus comes with free access to NVIDIA Nemotron models served by NVIDIA NIM. Open a folder, type what you want, and the agent starts working.</p>
+        <p class="reveal-up">When you outgrow the free tier, add your own key for Claude, Gemini, OpenAI, OpenRouter or Groq, or run models locally with Ollama or LM Studio and work fully offline.</p>
+      </div>
+      <ul class="checks">
+        <li class="reveal-up">Free models are selected by default on first launch</li>
+        <li class="reveal-up">Auto mode picks a model per request and moves to the next one if a model is busy or unavailable</li>
+        <li class="reveal-up">Your own keys always take priority over the free access</li>
+        <li class="red reveal-up">Local models through Ollama or LM Studio keep your code on your computer</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="section alt" id="open-source">
+    <div class="os-grid">
+      <div>
+        <p class="eyebrow reveal-up">Open source</p>
+        <h2 class="reveal-up">MIT licensed, from the first commit<span class="dot">.</span></h2>
+        <p class="sub reveal-up">Cepheus is released under the MIT license. Read it, build it yourself, fork it, change it and use it at work, including in commercial products. The only condition is keeping the copyright and license notice.</p>
+        <table class="facts reveal-up">
+          <tr><th>License</th><td>MIT</td></tr>
+          <tr><th>Core</th><td>Rust, Tauri 2</td></tr>
+          <tr><th>Interface</th><td>React, TypeScript, Monaco editor, xterm.js</td></tr>
+          <tr><th>Extensions</th><td>Themes, icon themes and snippets from Open VSX</td></tr>
+          <tr><th>Telemetry</th><td>None. The app does not report usage anywhere</td></tr>
+        </table>
+      </div>
+      <div class="term reveal" id="term" role="img" aria-label="Terminal: building Cepheus from source">
+        <div><span class="p">❯</span> npm install</div>
+        <div class="dim">added 412 packages</div>
+        <div><span class="p">❯</span> npm run app:build</div>
+        <div class="dim">Compiling cepheus-ide v0.1.0 (release)</div>
+        <div class="ok">Finished · bundle/nsis/Cepheus IDE_0.1.0_x64-setup.exe</div>
+        <div><span class="p">❯</span> <span class="caret"></span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section dark" id="private">
+    <p class="eyebrow reveal-up">Private and in control</p>
+    <h2 class="reveal-up">The agent works for you, on your terms<span class="dot">.</span></h2>
+    <div class="points">
+      <div class="pt reveal-up"><span class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#121212" stroke-width="1.8" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></span><h3>Your keys stay local</h3><p>API keys are stored in your user folder and sent only to the provider you picked. Profiles and Settings Sync strip keys and tokens before anything leaves your machine.</p></div>
+      <div class="pt reveal-up"><span class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#121212" stroke-width="1.8" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span><h3>You approve the risky parts</h3><p>Ask before every edit and command, allow edits but ask before commands, or let it run on its own. Every change can be shown as a diff and reverted in one click.</p></div>
+      <div class="pt reveal-up"><span class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#121212" stroke-width="1.8" aria-hidden="true"><path d="M12 3 4 6v6c0 4.5 3.4 8.3 8 9 4.6-.7 8-4.5 8-9V6z"/></svg></span><h3>Repos can't take over</h3><p>A project's settings file may change how the editor looks, but never which commands run, which AI provider is used or how much the agent may do without asking.</p></div>
+      <div class="pt reveal-up"><span class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#121212" stroke-width="1.8" aria-hidden="true"><path d="m8 6-6 6 6 6M16 6l6 6-6 6"/></svg></span><h3>Guardrails you can script</h3><p>Hooks run your own checks before a tool call and can block it. Custom agents can be limited to a list of tools.</p></div>
+      <div class="pt reveal-up"><span class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#121212" stroke-width="1.8" aria-hidden="true"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="10" r="2.5"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6M14 20c0-2.5 1.5-4.5 3-4.5s4 1 4 4.5"/></svg></span><h3>Ready for teams</h3><p>A policy file can lock settings, limit providers, models and MCP servers, set the minimum approval mode and allow only approved extensions.</p></div>
+      <div class="pt reveal-up"><span class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#121212" stroke-width="1.8" aria-hidden="true"><rect x="3" y="5" width="18" height="12" rx="2"/><path d="M8 21h8M12 17v4"/></svg></span><h3>Works where your code lives</h3><p>Open folders over SSH or inside a Dev Container. Files, terminals, git, search and the agent all run on that machine.</p></div>
+    </div>
+  </section>
+
+  <section class="section final" id="download">
+    <canvas class="silk" data-variant="final" aria-hidden="true"></canvas>
+    <p class="eyebrow">Get started</p>
+    <h2>Try it on your next project<span class="dot">.</span></h2>
+    <div class="hero-cta">
+      <a class="btn btn-dark lg" href="index.html#download">Download for Windows <span class="chev" aria-hidden="true">&gt;&gt;</span></a>
+      <a class="btn btn-light lg" href="docs.html">Read the docs</a>
+    </div>
+    <div class="meta"><span>Windows 10 and 11</span><span>Free</span><span>MIT License</span></div>
+  </section>
+</main>
+
+<footer class="site">
+  <span>© 2026 Cepheus · MIT License</span>
+  <nav><a href="index.html">Home</a><a href="docs.html">Docs</a><a href="index.html#faq">FAQ</a><a href="index.html#download">Download</a></nav>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js"></script>
+<script src="site.js"></script>
+</body>
+</html>

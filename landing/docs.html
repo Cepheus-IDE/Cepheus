@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cepheus Docs</title>
+<meta name="description" content="Documentation for Cepheus IDE: setup, the AI agent, customization, editing, debugging, testing, git and more.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="site.css">
+</head>
+<body>
+<nav class="nav" id="nav">
+  <a class="brand" href="index.html">
+    <svg width="18" height="18" viewBox="0 0 32 32" aria-hidden="true"><path d="M16 4 L27 12.5 L23.5 28 L8.5 28 L5 12.5 Z" fill="none" stroke="#121212" stroke-width="1.6" stroke-linejoin="round"/><circle cx="16" cy="4" r="2.8" fill="#e5352b"/><circle cx="27" cy="12.5" r="2" fill="#121212"/><circle cx="23.5" cy="28" r="2" fill="#121212"/><circle cx="8.5" cy="28" r="2" fill="#121212"/><circle cx="5" cy="12.5" r="2" fill="#121212"/></svg>
+    Cepheus
+  </a>
+  <div class="links">
+    <a href="index.html#features">Features</a>
+    <a href="why.html">Why Cepheus</a>
+    <a href="docs.html" aria-current="page">Docs</a>
+    <a href="index.html#models">Models</a>
+    <a href="index.html#faq">FAQ</a>
+  </div>
+  <a class="btn btn-dark" href="index.html#download">Download</a>
+</nav>
+
+<main>
+  <section class="page-hero" style="min-height:62svh">
+    <canvas class="silk" data-variant="page" aria-hidden="true"></canvas>
+    <p class="eyebrow">Documentation</p>
+    <h1 class="page-title">Cepheus Docs<span class="dot">.</span></h1>
+    <p class="lede">Everything you need to set up Cepheus, work with the agent, and make the editor fit the way you build.</p>
+  </section>
+
+  <section class="section alt" style="padding-top:clamp(56px,8vw,96px)">
+    <div class="docs">
+      <nav class="toc" aria-label="On this page">
+        <p class="eyebrow">On this page</p>
+        <a href="#start">Get started</a>
+        <a href="#models">AI models</a>
+        <a href="#agent">The agent</a>
+        <a href="#customize">Customize the agent</a>
+        <a href="#mcp">MCP servers</a>
+        <a href="#editing">Editing</a>
+        <a href="#debug">Debugging</a>
+        <a href="#testing">Testing</a>
+        <a href="#git">Git and GitHub</a>
+        <a href="#browser">Browser preview</a>
+        <a href="#remote">SSH and containers</a>
+        <a href="#settings">Settings and profiles</a>
+        <a href="#shortcuts">Keyboard shortcuts</a>
+        <a href="#teams">For teams</a>
+        <a href="#source">Build from source</a>
+      </nav>
+
+      <article class="doc">
+        <section class="reveal-up" id="start">
+          <h2>Get started</h2>
+          <ol>
+            <li>Install Cepheus on Windows 10 or 11. WebView2 is already part of Windows 11; on Windows 10 the installer adds it if it is missing.</li>
+            <li>Open a project with <kbd>Ctrl+O</kbd> or <b>File › Open Folder…</b>.</li>
+            <li>Press <kbd>Ctrl+L</kbd> to open the agent panel and describe what you want to build or fix.</li>
+          </ol>
+          <p>The agent starts on free NVIDIA models, so you don't need an API key for your first session. Install <a href="https://git-scm.com" target="_blank" rel="noopener">Git</a> to use source control.</p>
+        </section>
+
+        <section class="reveal-up" id="models">
+          <h2>AI models</h2>
+          <p>Choose a model from the picker at the bottom of the agent panel, or open <b>Chat: Manage Language Models…</b> from the Command Palette (<kbd>Ctrl+Shift+P</kbd>).</p>
+          <div class="tbl"><table>
+            <tr><th>Provider</th><th>What you need</th></tr>
+            <tr><td>NVIDIA (free)</td><td>Nothing. Optionally add your own <code>nvapi-…</code> key from build.nvidia.com for higher limits.</td></tr>
+            <tr><td>Anthropic Claude</td><td>An API key from console.anthropic.com</td></tr>
+            <tr><td>Google Gemini</td><td>An API key from aistudio.google.com</td></tr>
+            <tr><td>OpenAI-compatible</td><td>Base URL and key for OpenAI, OpenRouter, Groq and similar services. Add several under <b>Providers</b>.</td></tr>
+            <tr><td>Ollama, LM Studio</td><td>A local server, e.g. <code>http://localhost:11434/v1</code>. No key, and no internet needed.</td></tr>
+          </table></div>
+          <p><b>Auto</b> picks a model for each request and falls back to the next one if a model returns a rate limit, a server error, a timeout or "not found". Models that are not available for your account are skipped from then on.</p>
+          <p>You can also run <b>Claude Code</b> or <b>Codex</b> as the agent if their command-line tools are installed. Pick them in the harness menu next to the model picker.</p>
+        </section>
+
+        <section class="reveal-up" id="agent">
+          <h2>The agent</h2>
+          <p>The agent can list, search and read files, create and edit them, run commands in your project, and keep a checklist of its plan. Choose how much it may do on its own:</p>
+          <div class="tbl"><table>
+            <tr><th>Mode</th><th>Behavior</th></tr>
+            <tr><td>Ask</td><td>Asks before every file edit and every command.</td></tr>
+            <tr><td>Auto-edit</td><td>Edits files on its own, asks before running commands.</td></tr>
+            <tr><td>Turbo</td><td>Runs everything without asking.</td></tr>
+          </table></div>
+          <h3>Plan mode</h3>
+          <p>Turn on <b>Plan</b> in the chat footer to let the agent only read and research. It writes a plan; press <b>Start implementation</b> to continue in the same conversation.</p>
+          <h3>Steer while it works</h3>
+          <p>You can keep typing while the agent runs. Your message is queued and added before its next step, without stopping the work.</p>
+          <h3>Verify with checks</h3>
+          <p>Turn on <b>Verify</b> and the agent runs your project's checks when it finishes: <code>typecheck</code>, <code>lint</code> and <code>test</code> scripts from package.json, <code>cargo check</code>, <code>go test</code> or <code>pytest</code>. It fixes failures for up to three rounds.</p>
+          <h3>Review and undo</h3>
+          <p>Every file the agent changes appears in the <b>Changes</b> list. Open a diff, <b>Keep</b> the changes, or <b>Revert all</b>. Sessions are saved and come back after a restart. Run several tasks at once in the Agent Manager (<kbd>Ctrl+Shift+M</kbd>).</p>
+        </section>
+
+        <section class="reveal-up" id="customize">
+          <h2>Customize the agent</h2>
+          <p>Cepheus reads these files from the root of your project.</p>
+          <h3>Instructions</h3>
+          <p><code>AGENTS.md</code>, <code>CLAUDE.md</code>, <code>.github/copilot-instructions.md</code> and every file in <code>.cepheus/instructions/</code> are added to the agent's instructions. Limit a file to some paths with <code>applyTo</code>:</p>
+<pre><code>---
+applyTo: "src/**/*.tsx, src/**/*.css"
+---
+Use function components and CSS modules. Never add new npm packages.</code></pre>
+          <h3>Skills</h3>
+          <p>A skill is a folder with a <code>SKILL.md</code> and any scripts or templates it needs. The agent sees each skill's name and description, and loads the full text when it needs it.</p>
+<pre><code>.cepheus/skills/release-notes/SKILL.md
+---
+name: release-notes
+description: Write release notes from the git log since the last tag
+---
+1. Run `git describe --tags --abbrev=0` to find the last tag.
+2. Group commits into Features, Fixes and Other.</code></pre>
+          <h3>Custom agents</h3>
+          <p>Files in <code>.cepheus/agents/</code> define agents with their own instructions, an allowed tool list and an optional model. Pick one from the agent menu in the chat footer.</p>
+<pre><code>.cepheus/agents/reviewer.md
+---
+name: reviewer
+description: Reviews changes without editing files
+tools: [list_dir, find_files, read_file, search, run_command]
+model: nvidia/nemotron-3-ultra-550b-a55b
+---
+Review the uncommitted changes. Report bugs by severity with file:line.</code></pre>
+          <h3>Hooks</h3>
+          <p>Hooks in <code>.cepheus/hooks.json</code> run a command at a point in the agent's work. A <code>preToolUse</code> hook receives the tool call as JSON on stdin; if it exits with a non-zero code, the call is blocked and its error output is shown to the agent.</p>
+<pre><code>{
+  "hooks": [
+    { "event": "preToolUse", "matcher": "run_command", "command": "node scripts/check-command.js" },
+    { "event": "stop", "command": "npm run lint" }
+  ]
+}</code></pre>
+          <p>Events are <code>preToolUse</code>, <code>postToolUse</code> and <code>stop</code>. <code>matcher</code> is a regular expression on the tool name.</p>
+        </section>
+
+        <section class="reveal-up" id="mcp">
+          <h2>MCP servers</h2>
+          <p>Connect the agent to databases, issue trackers, design tools and other services through the Model Context Protocol. Add global servers under <b>Settings › MCP Servers</b>, or per project in <code>.cepheus/mcp.json</code>:</p>
+<pre><code>{
+  "servers": {
+    "github": { "command": "npx", "args": ["-y", "@modelcontextprotocol/server-github"], "env": { "GITHUB_TOKEN": "…" } },
+    "docs":   { "url": "https://example.com/mcp", "headers": { "Authorization": "Bearer …" } }
+  }
+}</code></pre>
+          <p>Use <code>command</code> for local servers and <code>url</code> for remote ones. Their tools appear to the agent as <code>mcp__server__tool</code> and need your approval unless you are in Turbo mode.</p>
+        </section>
+
+        <section class="reveal-up" id="editing">
+          <h2>Editing</h2>
+          <p>JavaScript, TypeScript, JSON, CSS and HTML work out of the box. For other languages Cepheus starts a language server when one is installed, and offers a one-click install when it isn't.</p>
+          <div class="tbl"><table>
+            <tr><th>Language</th><th>Server</th></tr>
+            <tr><td>Python</td><td>Pyright, basedpyright or pylsp</td></tr>
+            <tr><td>Rust</td><td>rust-analyzer</td></tr>
+            <tr><td>Go</td><td>gopls</td></tr>
+            <tr><td>C, C++</td><td>clangd</td></tr>
+            <tr><td>Java, PHP, Ruby, Lua, C#</td><td>jdtls, Intelephense, Solargraph, lua-language-server, csharp-ls</td></tr>
+            <tr><td>Bash, YAML, Dockerfile</td><td>bash-language-server, yaml-language-server, docker-langserver</td></tr>
+          </table></div>
+          <p>You get completion, hover, go to definition (<kbd>F12</kbd>), references (<kbd>Shift+F12</kbd>), rename (<kbd>F2</kbd>), quick fixes (<kbd>Ctrl+.</kbd>), refactorings (<kbd>Ctrl+Shift+R</kbd>), organize imports (<kbd>Shift+Alt+O</kbd>) and the Problems panel. Set a custom server command per language in <b>Settings › Language Servers</b>.</p>
+          <h3>Snippets</h3>
+          <p>Run <b>Snippets: Configure User Snippets</b> to edit snippets in the VS Code format, with tab stops (<code>$1</code>, <code>${1:name}</code>) and variables such as <code>$TM_FILENAME</code> and <code>$CURRENT_YEAR</code>. Project snippets go in <code>.cepheus/snippets/</code>.</p>
+          <h3>Terminal</h3>
+          <p>Open it with <kbd>Ctrl+`</kbd>. Split it with <kbd>Ctrl+\</kbd>, pick PowerShell, pwsh, cmd, Git Bash or WSL, and <kbd>Ctrl</kbd>-click file paths in the output to open them.</p>
+        </section>
+
+        <section class="reveal-up" id="debug">
+          <h2>Debugging</h2>
+          <p>Open a JavaScript or TypeScript file and press <kbd>F5</kbd>. Click left of a line number (or press <kbd>F9</kbd>) for a breakpoint; right-click for a conditional breakpoint, hit count or logpoint. While paused you see variables, the call stack, watch expressions and values inline in the editor.</p>
+          <p>For more control, add <code>.vscode/launch.json</code> or <code>.cepheus/launch.json</code> with the gear in the Run and Debug view:</p>
+<pre><code>{
+  "configurations": [
+    { "type": "node", "request": "launch", "name": "Server", "program": "${workspaceFolder}/src/server.ts", "envFile": "${workspaceFolder}/.env" },
+    { "type": "node", "request": "attach", "name": "Attach", "port": 9229 }
+  ]
+}</code></pre>
+          <p>Python debugging uses debugpy (<code>pip install debugpy</code>).</p>
+          <div class="tbl"><table>
+            <tr><th>Action</th><th>Key</th></tr>
+            <tr><td>Start or continue</td><td><kbd>F5</kbd></td></tr>
+            <tr><td>Step over, into, out</td><td><kbd>F10</kbd> <kbd>F11</kbd> <kbd>Shift+F11</kbd></td></tr>
+            <tr><td>Stop, restart</td><td><kbd>Shift+F5</kbd> <kbd>Ctrl+Shift+F5</kbd></td></tr>
+          </table></div>
+        </section>
+
+        <section class="reveal-up" id="testing">
+          <h2>Testing</h2>
+          <p>The Testing view finds tests for Vitest, Jest, Node's built-in test runner, pytest, cargo test and go test. Run or debug all tests, a file or a single test from the tree or from the <b>Run Test | Debug</b> links above each test.</p>
+          <p>Failures show a red mark at the assertion with an expected/actual diff, and <b>Fix with Agent</b> starts a task with the failure. Turn on coverage to color covered and uncovered lines, or watch mode to rerun affected tests on save.</p>
+        </section>
+
+        <section class="reveal-up" id="git">
+          <h2>Git and GitHub</h2>
+          <ul>
+            <li><b>Changes</b>: stage files or single hunks from the gutter, commit (with amend and sign-off), undo the last commit, stash, and Sync.</li>
+            <li><b>Merge conflicts</b>: accept current, incoming or both inline, or open the three-way merge editor and press <b>Complete Merge</b>.</li>
+            <li><b>Commits</b>: a graph of the branch with search; open any commit to see its changed files.</li>
+            <li><b>Branches</b>: checkout, create, rename, delete, merge, rebase and tags. Click the branch in the status bar for a quick picker.</li>
+            <li><b>Timeline</b>: the file's git history and its local history together.</li>
+            <li><b>GitHub</b>: connect with a personal access token to clone, publish, review and merge pull requests, and turn issues into agent tasks.</li>
+          </ul>
+        </section>
+
+        <section class="reveal-up" id="browser">
+          <h2>Browser preview</h2>
+          <p>When a dev server prints a local address, Cepheus offers to open it in a browser tab inside the editor. Run <b>Browser: Open Preview of Current HTML File</b> to serve a static page with live reload.</p>
+          <p>The tab has device sizes, DevTools and a console. <b>Share with Agent</b> sends the page's text, structure and console errors to the agent, and the agent can open, read and click through the page itself.</p>
+        </section>
+
+        <section class="reveal-up" id="remote">
+          <h2>SSH and containers</h2>
+          <p>Add a host in the <b>Remote · SSH</b> view (or import it from <code>~/.ssh/config</code>) and open a folder on it. Files, terminals, git, search and the agent run on the server.</p>
+          <p>If the project has <code>.devcontainer/devcontainer.json</code> and Docker is installed, run <b>Dev Containers: Reopen in Container</b>. Terminals and agent commands then run inside the container.</p>
+        </section>
+
+        <section class="reveal-up" id="settings">
+          <h2>Settings and profiles</h2>
+          <p>Open settings with <kbd>Ctrl+,</kbd>, or edit them as JSON with <b>Preferences: Open User Settings (JSON)</b>. A project can override editor and appearance settings in <code>.cepheus/settings.json</code>:</p>
+<pre><code>{ "tabSize": 4, "wordWrap": true, "theme": "builtin:paper" }</code></pre>
+          <div class="note">A project's settings file can only change how the editor looks and behaves. It can't change commands, language servers, AI providers or approval mode, so a cloned repository can't run anything on your machine through it.</div>
+          <p><b>Profiles</b> bundle settings, shortcuts, extensions, snippets and layout, and can be exported to a <code>.cepheus-profile</code> file. <b>Settings Sync</b> keeps them in a private GitHub Gist; API keys and tokens are never synced.</p>
+          <p>Themes, icon themes and snippets install from Open VSX in the Extensions view (<kbd>Ctrl+Shift+X</kbd>). You can also import settings and themes from VS Code, Cursor, Windsurf or VSCodium.</p>
+        </section>
+
+        <section class="reveal-up" id="shortcuts">
+          <h2>Keyboard shortcuts</h2>
+          <p>Change any shortcut in <b>Preferences: Keyboard Shortcuts</b>, or pick the Sublime-like or JetBrains-like keymap. <b>Export Keyboard Shortcuts</b> saves a printable list.</p>
+          <div class="tbl"><table>
+            <tr><th>Action</th><th>Key</th></tr>
+            <tr><td>Command Palette</td><td><kbd>Ctrl+Shift+P</kbd></td></tr>
+            <tr><td>Go to file</td><td><kbd>Ctrl+P</kbd></td></tr>
+            <tr><td>Agent panel</td><td><kbd>Ctrl+L</kbd></td></tr>
+            <tr><td>New agent task</td><td><kbd>Ctrl+Shift+N</kbd></td></tr>
+            <tr><td>Inline AI edit</td><td><kbd>Ctrl+K</kbd></td></tr>
+            <tr><td>Search in files</td><td><kbd>Ctrl+Shift+F</kbd></td></tr>
+            <tr><td>Source control</td><td><kbd>Ctrl+Shift+G</kbd></td></tr>
+            <tr><td>Run and Debug</td><td><kbd>Ctrl+Shift+D</kbd></td></tr>
+            <tr><td>Time Machine (file history)</td><td><kbd>Ctrl+Alt+H</kbd></td></tr>
+            <tr><td>Zoom in, out, reset</td><td><kbd>Ctrl+=</kbd> <kbd>Ctrl+-</kbd> <kbd>Ctrl+0</kbd></td></tr>
+          </table></div>
+        </section>
+
+        <section class="reveal-up" id="teams">
+          <h2>For teams</h2>
+          <p>Administrators can place a policy file that overrides user settings on every machine:</p>
+          <div class="tbl"><table>
+            <tr><th>System</th><th>Path</th></tr>
+            <tr><td>Windows</td><td><code>%ProgramData%\Cepheus\policy.json</code></td></tr>
+            <tr><td>macOS</td><td><code>/Library/Application Support/Cepheus/policy.json</code></td></tr>
+            <tr><td>Linux</td><td><code>/etc/cepheus/policy.json</code></td></tr>
+          </table></div>
+<pre><code>{
+  "allowedProviders": ["nvidia", "anthropic"],
+  "minimumApprovalMode": "auto-edit",
+  "allowedMcpServers": ["github"],
+  "extensionAllowlist": ["zhuangtongfa", "PKief.material-icon-theme"],
+  "sharedInstructions": "Follow the team style guide in docs/STYLE.md.",
+  "proxy": "http://proxy.internal:8080"
+}</code></pre>
+          <p>Locked settings show <b>Managed by your organization</b> in the app. Policy can also set allowed models and agent tools, preinstalled extensions, a private extension registry, extra trusted certificates and the update mode.</p>
+        </section>
+
+        <section class="reveal-up" id="source">
+          <h2>Build from source</h2>
+          <p>Cepheus is open source under the MIT license. To build it you need Rust (stable, MSVC), the Visual Studio Build Tools with the C++ workload, and Node.js 18 or newer.</p>
+<pre><code>npm install
+npm run app:dev     # run with hot reload
+npm run app:build   # build the installer into src-tauri/target/release/bundle</code></pre>
+          <p>The Rust core lives in <code>src-tauri/src</code> and the interface in <code>src</code>.</p>
+        </section>
+      </article>
+    </div>
+  </section>
+</main>
+
+<footer class="site">
+  <span>© 2026 Cepheus · MIT License</span>
+  <nav><a href="index.html">Home</a><a href="why.html">Why Cepheus</a><a href="index.html#faq">FAQ</a><a href="index.html#download">Download</a></nav>
+</footer>
+<script src="https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js"></script>
+<script src="site.js"></script>
+</body>
+</html>
